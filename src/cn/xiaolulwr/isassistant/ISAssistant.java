@@ -6,6 +6,12 @@ import java.awt.EventQueue;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
+
+import cn.xiaolulwr.isassistant.common.DigitalSignatureAlgorithm;
+import cn.xiaolulwr.isassistant.common.HashAlgorithm;
+import cn.xiaolulwr.isassistant.crypto.DecryptCore;
+import cn.xiaolulwr.isassistant.crypto.EncryptCore;
+
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.JLabel;
@@ -13,27 +19,46 @@ import javax.swing.JButton;
 import javax.swing.JMenuBar;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.awt.event.ActionEvent;
 import javax.swing.JPasswordField;
 import javax.swing.JSlider;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
+import javax.swing.DefaultComboBoxModel;
 
-public class ISAssistant extends JFrame {
+public class ISAssistant extends JFrame implements ActionListener {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
 	private JPanel contentPane;
-	private JTextField textFieldCryptoFile;
-	private JPasswordField passwordField;
-	private JPasswordField passwordField_1;
+	private JTextField textFieldEncryptFile;
+	private JPasswordField passwordFieldSet;
+	private JPasswordField passwordFieldConfirm;
 	private JTextField textFieldSignFile;
-	private JTextField textField;
-	private JPasswordField passwordField_2;
-	private JTextField textField_1;
-
+	private JTextField textFieldDecryptFile;
+	private JPasswordField passwordFieldCheck;
+	private JTextField textFieldSignValue;
+	private JTextField textFieldHashMessage;
+	private JTextField textFieldMacMessage;
+	private JTextField textField224Value;
+	private JTextField textField256Value;
+	private JTextField textField384Value;
+	private JTextField textField512Value;
+	
+	private File workingFile;
+	private JButton btnEncrypt;
+	private JButton btnSign;
+	private JButton btnHash;
+	private JButton btnMac;
+	private JButton btnDecrypt;
+	private JSlider sliderEncryptMode;
 	/**
 	 * Launch the application.
 	 */
@@ -66,11 +91,7 @@ public class ISAssistant extends JFrame {
 		menuBar.add(menu);
 		
 		JMenuItem menuItemNewKeyStore = new JMenuItem("新建密钥库");
-		menuItemNewKeyStore.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				
-			}
-		});
+		menuItemNewKeyStore.addActionListener(this);
 		menu.add(menuItemNewKeyStore);
 		
 		JMenuItem menuItemOpenKeyStore = new JMenuItem("打开密钥库");
@@ -105,53 +126,54 @@ public class ISAssistant extends JFrame {
 		Color bgColor=new Color(229, 229, 229);
 		
 		JPanel panelEncrypt = new JPanel();
-		panelEncrypt.setForeground(Color.WHITE);
 		panelEncrypt.setBackground(bgColor);
 		tabbedPaneMain.addTab("文件加密", null, panelEncrypt, null);
 		tabbedPaneMain.setEnabledAt(0, true);
 		panelEncrypt.setLayout(null);
 		
-		textFieldCryptoFile = new JTextField();
-		textFieldCryptoFile.setEditable(false);
-		textFieldCryptoFile.setBounds(92, 22, 281, 26);
-		panelEncrypt.add(textFieldCryptoFile);
-		textFieldCryptoFile.setColumns(10);
+		textFieldEncryptFile = new JTextField();
+		textFieldEncryptFile.setEditable(false);
+		textFieldEncryptFile.setBounds(92, 22, 281, 26);
+		panelEncrypt.add(textFieldEncryptFile);
+		textFieldEncryptFile.setColumns(10);
 		
 		JLabel label = new JLabel("选择文件");
 		label.setBounds(34, 27, 61, 16);
 		panelEncrypt.add(label);
 		
-		JButton buttonSelect = new JButton("浏览");
-		buttonSelect.setBounds(374, 22, 75, 29);
-		panelEncrypt.add(buttonSelect);
+		JButton btnEncryptSelect = new JButton("浏览");
+		btnEncryptSelect.addActionListener(this);
+		btnEncryptSelect.setBounds(374, 22, 75, 29);
+		panelEncrypt.add(btnEncryptSelect);
 		
-		JButton btnEncrypt = new JButton("开始加密");
+		btnEncrypt = new JButton("开始加密");
+		btnEncrypt.addActionListener(this);
 		btnEncrypt.setBounds(102, 272, 117, 29);
 		panelEncrypt.add(btnEncrypt);
 		
-		passwordField = new JPasswordField();
-		passwordField.setBounds(92, 120, 281, 26);
-		panelEncrypt.add(passwordField);
+		passwordFieldSet = new JPasswordField();
+		passwordFieldSet.setBounds(92, 120, 281, 26);
+		panelEncrypt.add(passwordFieldSet);
 		
 		JLabel label_1 = new JLabel("输入密码");
 		label_1.setBounds(34, 125, 61, 16);
 		panelEncrypt.add(label_1);
 		
-		passwordField_1 = new JPasswordField();
-		passwordField_1.setBounds(92, 166, 281, 26);
-		panelEncrypt.add(passwordField_1);
+		passwordFieldConfirm = new JPasswordField();
+		passwordFieldConfirm.setBounds(92, 166, 281, 26);
+		panelEncrypt.add(passwordFieldConfirm);
 		
 		JLabel label_2 = new JLabel("确认密码");
 		label_2.setBounds(34, 171, 61, 16);
 		panelEncrypt.add(label_2);
 		
-		JSlider slider = new JSlider();
-		slider.setSnapToTicks(true);
-		slider.setPaintLabels(true);
-		slider.setValue(1);
-		slider.setMaximum(2);
-		slider.setBounds(133, 60, 190, 29);
-		panelEncrypt.add(slider);
+		sliderEncryptMode = new JSlider();
+		sliderEncryptMode.setSnapToTicks(true);
+		sliderEncryptMode.setPaintLabels(true);
+		sliderEncryptMode.setValue(1);
+		sliderEncryptMode.setMaximum(2);
+		sliderEncryptMode.setBounds(133, 60, 190, 29);
+		panelEncrypt.add(sliderEncryptMode);
 		
 		JLabel lblNewLabel = new JLabel("加密强度");
 		lblNewLabel.setBounds(78, 68, 61, 16);
@@ -175,24 +197,25 @@ public class ISAssistant extends JFrame {
 		label_5.setBounds(289, 92, 34, 16);
 		panelEncrypt.add(label_5);
 		
-		JButton button = new JButton("重置");
-		button.setBounds(241, 272, 117, 29);
-		panelEncrypt.add(button);
+		JButton btnEncryptReset = new JButton("重置");
+		btnEncryptReset.addActionListener(this);
+		btnEncryptReset.setBounds(241, 272, 117, 29);
+		panelEncrypt.add(btnEncryptReset);
 		
 		JPanel panelDecrypt = new JPanel();
 		panelDecrypt.setBackground(bgColor);
 		tabbedPaneMain.addTab("文件解密", null, panelDecrypt, null);
 		panelDecrypt.setLayout(null);
 		
-		textField = new JTextField();
-		textField.setEditable(false);
-		textField.setColumns(10);
-		textField.setBounds(92, 22, 281, 26);
-		panelDecrypt.add(textField);
+		textFieldDecryptFile = new JTextField();
+		textFieldDecryptFile.setEditable(false);
+		textFieldDecryptFile.setColumns(10);
+		textFieldDecryptFile.setBounds(92, 22, 281, 26);
+		panelDecrypt.add(textFieldDecryptFile);
 		
-		passwordField_2 = new JPasswordField();
-		passwordField_2.setBounds(92, 120, 281, 26);
-		panelDecrypt.add(passwordField_2);
+		passwordFieldCheck = new JPasswordField();
+		passwordFieldCheck.setBounds(92, 120, 281, 26);
+		panelDecrypt.add(passwordFieldCheck);
 		
 		JLabel label_7 = new JLabel("选择文件");
 		label_7.setBounds(34, 27, 61, 16);
@@ -202,21 +225,24 @@ public class ISAssistant extends JFrame {
 		label_8.setBounds(34, 125, 61, 16);
 		panelDecrypt.add(label_8);
 		
-		JButton button_1 = new JButton("开始解密");
-		button_1.setBounds(110, 251, 117, 29);
-		panelDecrypt.add(button_1);
+		btnDecrypt = new JButton("开始解密");
+		btnDecrypt.addActionListener(this);
+		btnDecrypt.setBounds(102, 272, 117, 29);
+		panelDecrypt.add(btnDecrypt);
 		
 		JLabel label_9 = new JLabel("密码长度必须是6-16位");
-		label_9.setBounds(164, 185, 136, 16);
+		label_9.setBounds(166, 204, 136, 16);
 		panelDecrypt.add(label_9);
 		
-		JButton button_2 = new JButton("浏览");
-		button_2.setBounds(374, 22, 75, 29);
-		panelDecrypt.add(button_2);
+		JButton btnDecryptSelect = new JButton("浏览");
+		btnDecryptSelect.addActionListener(this);
+		btnDecryptSelect.setBounds(374, 22, 75, 29);
+		panelDecrypt.add(btnDecryptSelect);
 		
-		JButton button_3 = new JButton("重置");
-		button_3.setBounds(239, 251, 117, 29);
-		panelDecrypt.add(button_3);
+		JButton btnDecryptReset = new JButton("重置");
+		btnDecryptReset.addActionListener(this);
+		btnDecryptReset.setBounds(241, 272, 117, 29);
+		panelDecrypt.add(btnDecryptReset);
 		
 		JPanel panelSign = new JPanel();
 		panelSign.setBackground(bgColor);
@@ -233,31 +259,220 @@ public class ISAssistant extends JFrame {
 		label_6.setBounds(34, 27, 52, 16);
 		panelSign.add(label_6);
 		
-		JButton button_4 = new JButton("浏览");
-		button_4.setBounds(374, 22, 75, 29);
-		panelSign.add(button_4);
+		JButton btnSignSelect = new JButton("浏览");
+		btnSignSelect.addActionListener(this);
+		btnSignSelect.setBounds(374, 22, 75, 29);
+		panelSign.add(btnSignSelect);
 		
-		JCheckBox checkBox = new JCheckBox("验证签名");
-		checkBox.setBounds(374, 95, 84, 23);
-		panelSign.add(checkBox);
+		JCheckBox checkBoxIsVerify = new JCheckBox("验证签名");
+		checkBoxIsVerify.setBounds(374, 160, 84, 23);
+		panelSign.add(checkBoxIsVerify);
 		
-		textField_1 = new JTextField();
-		textField_1.setBounds(92, 94, 281, 26);
-		panelSign.add(textField_1);
-		textField_1.setColumns(10);
+		textFieldSignValue = new JTextField();
+		textFieldSignValue.setBounds(92, 159, 281, 26);
+		panelSign.add(textFieldSignValue);
+		textFieldSignValue.setColumns(10);
 		
 		JLabel label_10 = new JLabel("签名值");
-		label_10.setBounds(34, 99, 44, 16);
+		label_10.setBounds(34, 164, 44, 16);
 		panelSign.add(label_10);
+		
+		JComboBox<HashAlgorithm> comboBoxHash = new JComboBox<HashAlgorithm>();
+		comboBoxHash.setModel(new DefaultComboBoxModel<HashAlgorithm>(HashAlgorithm.values()));
+		comboBoxHash.setBounds(227, 70, 111, 27);
+		panelSign.add(comboBoxHash);
+		
+		JComboBox<DigitalSignatureAlgorithm> comboBoxDigitalSign = new JComboBox<DigitalSignatureAlgorithm>();
+		comboBoxDigitalSign.setModel(new DefaultComboBoxModel<DigitalSignatureAlgorithm>(DigitalSignatureAlgorithm.values()));
+		comboBoxDigitalSign.setBounds(227, 116, 111, 27);
+		panelSign.add(comboBoxDigitalSign);
+		
+		JLabel label_11 = new JLabel("消息摘要算法");
+		label_11.setBounds(131, 74, 84, 16);
+		panelSign.add(label_11);
+		
+		JLabel label_12 = new JLabel("数字签名算法");
+		label_12.setBounds(131, 120, 84, 16);
+		panelSign.add(label_12);
+		
+		btnSign = new JButton("开始签名");
+		btnSign.addActionListener(this);
+		btnSign.setBounds(102, 272, 117, 29);
+		panelSign.add(btnSign);
+		
+		JButton btnSignReset = new JButton("重置");
+		btnSignReset.addActionListener(this);
+		btnSignReset.setBounds(241, 272, 117, 29);
+		panelSign.add(btnSignReset);
 		
 		JPanel panelHash = new JPanel();
 		panelHash.setBackground(bgColor);
 		tabbedPaneMain.addTab("消息摘要", null, panelHash, null);
 		panelHash.setLayout(null);
 		
+		textFieldHashMessage = new JTextField();
+		textFieldHashMessage.setColumns(10);
+		textFieldHashMessage.setBounds(92, 22, 281, 26);
+		panelHash.add(textFieldHashMessage);
+		
+		JLabel label_13 = new JLabel("消息/文件");
+		label_13.setBounds(31, 27, 59, 16);
+		panelHash.add(label_13);
+		
+		JButton btnHashSelect = new JButton("浏览");
+		btnHashSelect.addActionListener(this);
+		btnHashSelect.setBounds(374, 22, 75, 29);
+		panelHash.add(btnHashSelect);
+		
+		btnHash = new JButton("计算消息摘要");
+		btnHash.addActionListener(this);
+		btnHash.setBounds(102, 272, 117, 29);
+		panelHash.add(btnHash);
+		
+		JButton btnHashReset = new JButton("重置");
+		btnHashReset.addActionListener(this);
+		btnHashReset.setBounds(241, 272, 117, 29);
+		panelHash.add(btnHashReset);
+		
+		textField224Value = new JTextField();
+		textField224Value.setBounds(92, 96, 281, 26);
+		panelHash.add(textField224Value);
+		textField224Value.setColumns(10);
+		
+		textField256Value = new JTextField();
+		textField256Value.setColumns(10);
+		textField256Value.setBounds(92, 134, 281, 26);
+		panelHash.add(textField256Value);
+		
+		textField384Value = new JTextField();
+		textField384Value.setColumns(10);
+		textField384Value.setBounds(92, 172, 281, 26);
+		panelHash.add(textField384Value);
+		
+		textField512Value = new JTextField();
+		textField512Value.setColumns(10);
+		textField512Value.setBounds(92, 210, 281, 26);
+		panelHash.add(textField512Value);
+		
+		JLabel lblSha = new JLabel("SHA-224");
+		lblSha.setBounds(21, 101, 69, 16);
+		panelHash.add(lblSha);
+		
+		JLabel lblSha_1 = new JLabel("SHA-256");
+		lblSha_1.setBounds(21, 139, 69, 16);
+		panelHash.add(lblSha_1);
+		
+		JLabel lblSha_2 = new JLabel("SHA-384");
+		lblSha_2.setBounds(21, 177, 69, 16);
+		panelHash.add(lblSha_2);
+		
+		JLabel lblSha_3 = new JLabel("SHA-512");
+		lblSha_3.setBounds(21, 215, 69, 16);
+		panelHash.add(lblSha_3);
+		
+		JCheckBox checkboxIsUseSha3 = new JCheckBox("使用SHA-3算法");
+		checkboxIsUseSha3.setBounds(162, 61, 128, 23);
+		panelHash.add(checkboxIsUseSha3);
+		
 		JPanel panelMac = new JPanel();
 		panelMac.setBackground(bgColor);
 		tabbedPaneMain.addTab("消息认证码", null, panelMac, null);
 		panelMac.setLayout(null);
+		
+		textFieldMacMessage = new JTextField();
+		textFieldMacMessage.setColumns(10);
+		textFieldMacMessage.setBounds(92, 22, 281, 26);
+		panelMac.add(textFieldMacMessage);
+		
+		JLabel label_14 = new JLabel("消息/文件");
+		label_14.setBounds(31, 27, 59, 16);
+		panelMac.add(label_14);
+		
+		JButton btnMacSelect = new JButton("浏览");
+		btnMacSelect.addActionListener(this);
+		btnMacSelect.setBounds(374, 22, 75, 29);
+		panelMac.add(btnMacSelect);
+		
+		btnMac = new JButton("计算MAC");
+		btnMac.addActionListener(this);
+		btnMac.setBounds(102, 272, 117, 29);
+		panelMac.add(btnMac);
+		
+		JButton btnMacReset = new JButton("重置");
+		btnMacReset.addActionListener(this);
+		btnMacReset.setBounds(241, 272, 117, 29);
+		panelMac.add(btnMacReset);
+	}
+
+	public void actionPerformed(ActionEvent e) {
+		if(e.getActionCommand().equals("浏览")) {
+			JFileChooser fileChooser=new JFileChooser();
+			if(fileChooser.showOpenDialog(this)==JFileChooser.APPROVE_OPTION) {
+				workingFile=fileChooser.getSelectedFile();
+				this.setFilePath(workingFile.getAbsolutePath());
+			}
+		}
+		else if(e.getActionCommand().equals("重置")) {
+			workingFile=null;
+			this.setFilePath("");
+		}
+		else if(e.getSource()==btnEncrypt) {	
+			if(workingFile==null) {
+				JOptionPane.showMessageDialog(this,"请选择文件","错误",JOptionPane.ERROR_MESSAGE);
+				return;
+			}
+			char[] password=passwordFieldSet.getPassword();
+			char[] passwordConfirm=passwordFieldConfirm.getPassword();
+			if(password.length<6 || password.length>16) {
+				JOptionPane.showMessageDialog(this,"密码长度必须介于6-16位之间","错误",JOptionPane.ERROR_MESSAGE);
+				return;
+			}
+			int keyLength=(sliderEncryptMode.getValue()/2+1)*16;
+			EncryptCore core=EncryptCore.getInstance(passwordConfirm, keyLength);
+			try {
+				core.encryptFile(workingFile);
+				core.clean();
+				JOptionPane.showMessageDialog(this,"加密完成","温馨提示",JOptionPane.INFORMATION_MESSAGE);
+			} 
+			catch (Exception exc) {
+				exc.printStackTrace();
+				JOptionPane.showMessageDialog(this,exc.toString(),"内部错误",JOptionPane.ERROR_MESSAGE);
+			}
+		}
+		else if(e.getSource()==btnDecrypt) {
+			if(workingFile==null) {
+				JOptionPane.showMessageDialog(this,"请选择文件","错误",JOptionPane.ERROR_MESSAGE);
+				return;
+			}
+			JFileChooser fileChooser=new JFileChooser();
+			File output;
+			if(fileChooser.showSaveDialog(this)==JFileChooser.APPROVE_OPTION) {
+				output=fileChooser.getSelectedFile();
+			}
+			else {
+				return;
+			}
+			char[] password=passwordFieldCheck.getPassword();
+			DecryptCore core=DecryptCore.getInstance(password);
+			try {
+				core.decryptFile(workingFile,output);
+				core.clean();
+				JOptionPane.showMessageDialog(this,"解密完成","温馨提示",JOptionPane.INFORMATION_MESSAGE);
+			} 
+			catch (Exception exc) {
+				exc.printStackTrace();
+				JOptionPane.showMessageDialog(this,exc.getMessage(),"错误",JOptionPane.ERROR_MESSAGE);
+			}
+		}
+		else {
+			System.out.println(e.getActionCommand());
+		}
+	}
+	public void setFilePath(String path) {
+		textFieldEncryptFile.setText(path);
+		textFieldDecryptFile.setText(path);
+		textFieldSignFile.setText(path);
+		textFieldHashMessage.setText(path);
+		textFieldMacMessage.setText(path);
 	}
 }
