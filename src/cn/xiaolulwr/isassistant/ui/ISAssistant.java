@@ -1,4 +1,4 @@
-package cn.xiaolulwr.isassistant;
+package cn.xiaolulwr.isassistant.ui;
 
 import java.awt.Color;
 import java.awt.EventQueue;
