@@ -7,10 +7,16 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+
 import cn.xiaolulwr.isassistant.common.DigitalSignatureAlgorithm;
 import cn.xiaolulwr.isassistant.common.HashAlgorithm;
+import cn.xiaolulwr.isassistant.common.KeyStoreManager;
+import cn.xiaolulwr.isassistant.common.ParentFrameInterface;
 import cn.xiaolulwr.isassistant.crypto.DecryptCore;
 import cn.xiaolulwr.isassistant.crypto.EncryptCore;
+import cn.xiaolulwr.isassistant.sign.SetPasswordDialog;
+import cn.xiaolulwr.isassistant.sign.VerifyPasswordDialog;
 
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
@@ -23,7 +29,10 @@ import javax.swing.JOptionPane;
 
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.security.Security;
+import java.util.Arrays;
 import java.awt.event.ActionEvent;
+
 import javax.swing.JPasswordField;
 import javax.swing.JSlider;
 import javax.swing.JCheckBox;
@@ -31,7 +40,7 @@ import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.DefaultComboBoxModel;
 
-public class ISAssistant extends JFrame implements ActionListener {
+public class ISAssistant extends JFrame implements ActionListener,ParentFrameInterface {
 
 	/**
 	 * 
@@ -52,13 +61,17 @@ public class ISAssistant extends JFrame implements ActionListener {
 	private JTextField textField384Value;
 	private JTextField textField512Value;
 	
-	private File workingFile;
+	private File workingFile,keystoreFile;
+	private KeyStoreManager ksmanager;
 	private JButton btnEncrypt;
 	private JButton btnSign;
 	private JButton btnHash;
 	private JButton btnMac;
 	private JButton btnDecrypt;
 	private JSlider sliderEncryptMode;
+	private JCheckBox checkBoxIsVerify;
+	private JComboBox<HashAlgorithm> comboBoxHash;
+	private JComboBox<DigitalSignatureAlgorithm> comboBoxDigitalSign;
 	/**
 	 * Launch the application.
 	 */
@@ -66,6 +79,7 @@ public class ISAssistant extends JFrame implements ActionListener {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
+					Security.addProvider(new BouncyCastleProvider());
 					ISAssistant frame = new ISAssistant();
 					frame.setVisible(true);
 				} catch (Exception e) {
@@ -90,18 +104,32 @@ public class ISAssistant extends JFrame implements ActionListener {
 		JMenu menu = new JMenu("文件");
 		menuBar.add(menu);
 		
-		JMenuItem menuItemNewKeyStore = new JMenuItem("新建密钥库");
-		menuItemNewKeyStore.addActionListener(this);
-		menu.add(menuItemNewKeyStore);
-		
-		JMenuItem menuItemOpenKeyStore = new JMenuItem("打开密钥库");
-		menu.add(menuItemOpenKeyStore);
-		
 		JMenuItem menuItemOpenFile = new JMenuItem("打开文件");
+		menuItemOpenFile.addActionListener(this);
 		menu.add(menuItemOpenFile);
 		
 		JMenuItem menuItemExit = new JMenuItem("退出");
+		menuItemExit.addActionListener(this);
+		
+		JMenuItem menuItemCloseFile = new JMenuItem("关闭文件");
+		menuItemCloseFile.addActionListener(this);
+		menu.add(menuItemCloseFile);
 		menu.add(menuItemExit);
+		
+		JMenu menu_2 = new JMenu("密钥库");
+		menuBar.add(menu_2);
+		
+		JMenuItem menuItemNewKeyStore = new JMenuItem("新建密钥库");
+		menuItemNewKeyStore.addActionListener(this);
+		menu_2.add(menuItemNewKeyStore);
+		
+		JMenuItem menuItemOpenKeyStore = new JMenuItem("打开密钥库");
+		menuItemOpenKeyStore.addActionListener(this);
+		menu_2.add(menuItemOpenKeyStore);
+		
+		JMenuItem menuItemCloseKeyStore = new JMenuItem("关闭密钥库");
+		menuItemCloseKeyStore.addActionListener(this);
+		menu_2.add(menuItemCloseKeyStore);
 		
 		JMenu menu_1 = new JMenu("帮助");
 		menuBar.add(menu_1);
@@ -264,7 +292,8 @@ public class ISAssistant extends JFrame implements ActionListener {
 		btnSignSelect.setBounds(374, 22, 75, 29);
 		panelSign.add(btnSignSelect);
 		
-		JCheckBox checkBoxIsVerify = new JCheckBox("验证签名");
+		checkBoxIsVerify = new JCheckBox("验证签名");
+		checkBoxIsVerify.addActionListener(this);
 		checkBoxIsVerify.setBounds(374, 160, 84, 23);
 		panelSign.add(checkBoxIsVerify);
 		
@@ -277,12 +306,12 @@ public class ISAssistant extends JFrame implements ActionListener {
 		label_10.setBounds(34, 164, 44, 16);
 		panelSign.add(label_10);
 		
-		JComboBox<HashAlgorithm> comboBoxHash = new JComboBox<HashAlgorithm>();
+		comboBoxHash = new JComboBox<HashAlgorithm>();
 		comboBoxHash.setModel(new DefaultComboBoxModel<HashAlgorithm>(HashAlgorithm.values()));
 		comboBoxHash.setBounds(227, 70, 111, 27);
 		panelSign.add(comboBoxHash);
 		
-		JComboBox<DigitalSignatureAlgorithm> comboBoxDigitalSign = new JComboBox<DigitalSignatureAlgorithm>();
+		comboBoxDigitalSign = new JComboBox<DigitalSignatureAlgorithm>();
 		comboBoxDigitalSign.setModel(new DefaultComboBoxModel<DigitalSignatureAlgorithm>(DigitalSignatureAlgorithm.values()));
 		comboBoxDigitalSign.setBounds(227, 116, 111, 27);
 		panelSign.add(comboBoxDigitalSign);
@@ -405,16 +434,60 @@ public class ISAssistant extends JFrame implements ActionListener {
 	}
 
 	public void actionPerformed(ActionEvent e) {
-		if(e.getActionCommand().equals("浏览")) {
+		if(e.getActionCommand().equals("浏览") || e.getActionCommand().equals("打开文件")) {
 			JFileChooser fileChooser=new JFileChooser();
 			if(fileChooser.showOpenDialog(this)==JFileChooser.APPROVE_OPTION) {
 				workingFile=fileChooser.getSelectedFile();
 				this.setFilePath(workingFile.getAbsolutePath());
 			}
 		}
+		else if(e.getActionCommand().equals("新建密钥库")) {
+			JFileChooser fileChooser=new JFileChooser();
+			if(fileChooser.showSaveDialog(this)==JFileChooser.APPROVE_OPTION) {
+				keystoreFile=fileChooser.getSelectedFile();
+				SetPasswordDialog dialog=new SetPasswordDialog();
+				dialog.setParent(this);
+				dialog.setAlwaysOnTop(true);
+				dialog.setVisible(true);
+			}
+		}
+		else if(e.getActionCommand().equals("打开密钥库")) {
+			JFileChooser fileChooser=new JFileChooser();
+			if(fileChooser.showOpenDialog(this)==JFileChooser.APPROVE_OPTION) {
+				keystoreFile=fileChooser.getSelectedFile();
+				VerifyPasswordDialog dialog=new VerifyPasswordDialog();
+				dialog.setParent(this);
+				dialog.setAlwaysOnTop(true);
+				dialog.setVisible(true);
+			}
+		}
 		else if(e.getActionCommand().equals("重置")) {
 			workingFile=null;
 			this.setFilePath("");
+			textField224Value.setText("");
+			textField256Value.setText("");
+			textField384Value.setText("");
+			textField512Value.setText("");
+			passwordFieldCheck.setText("");
+			passwordFieldConfirm.setText("");
+			passwordFieldSet.setText("");
+		}
+		else if(e.getActionCommand().equals("关闭文件")) {
+			workingFile=null;
+			this.setFilePath("");
+			JOptionPane.showMessageDialog(this,"文件已关闭","提示",JOptionPane.INFORMATION_MESSAGE);
+		}
+		else if(e.getActionCommand().equals("关闭密钥库")) {
+			keystoreFile=null;
+			if(ksmanager!=null) {
+				try {
+					ksmanager.clean();
+				} catch (Exception exc) {
+					exc.printStackTrace();
+					JOptionPane.showMessageDialog(this,exc.getMessage(),"错误",JOptionPane.ERROR_MESSAGE);
+				}
+			}
+			JOptionPane.showMessageDialog(this,"密钥库已关闭","提示",JOptionPane.INFORMATION_MESSAGE);
 		}
 		else if(e.getSource()==btnEncrypt) {	
 			if(workingFile==null) {
@@ -425,6 +498,10 @@ public class ISAssistant extends JFrame implements ActionListener {
 			char[] passwordConfirm=passwordFieldConfirm.getPassword();
 			if(password.length<6 || password.length>16) {
 				JOptionPane.showMessageDialog(this,"密码长度必须介于6-16位之间","错误",JOptionPane.ERROR_MESSAGE);
+				return;
+			}
+			if(!Arrays.equals(password, passwordConfirm)) {
+				JOptionPane.showMessageDialog(this,"两次密码输入不一致","错误",JOptionPane.ERROR_MESSAGE);
 				return;
 			}
 			int keyLength=(sliderEncryptMode.getValue()/2+1)*16;
@@ -464,6 +541,19 @@ public class ISAssistant extends JFrame implements ActionListener {
 				JOptionPane.showMessageDialog(this,exc.getMessage(),"错误",JOptionPane.ERROR_MESSAGE);
 			}
 		}
+		else if(e.getSource()==checkBoxIsVerify) {
+			if(checkBoxIsVerify.isSelected()) {
+				btnSign.setText("开始验证");
+				textFieldSignValue.setEditable(true);
+			}
+			else {
+				btnSign.setText("开始签名");
+				textFieldSignValue.setEditable(false);
+			}
+		}
+		else if(e.getSource()==btnSign) {
+			
+		}
 		else {
 			System.out.println(e.getActionCommand());
 		}
@@ -474,5 +564,19 @@ public class ISAssistant extends JFrame implements ActionListener {
 		textFieldSignFile.setText(path);
 		textFieldHashMessage.setText(path);
 		textFieldMacMessage.setText(path);
+	}
+
+	public void didVerifyPasswordDialogOkButtonClicked(Object sender, char[] password) {
+		try {
+			ksmanager=KeyStoreManager.getInstance();
+			System.out.println(password);
+		} catch (Exception e) {
+			e.printStackTrace();
+			JOptionPane.showMessageDialog(this,e.getMessage(),"错误",JOptionPane.ERROR_MESSAGE);
+		}
+	}
+
+	public void didSetPasswordDialogOkButtonClicked(Object sender, char[] password) {
+		System.out.println(password);
 	}
 }

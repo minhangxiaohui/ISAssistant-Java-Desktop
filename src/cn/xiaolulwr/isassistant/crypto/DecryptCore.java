@@ -20,11 +20,11 @@ public class DecryptCore {
 	private FileOutputStream outputStream;
 	private DecryptCore(){}
 	
-	public static DecryptCore getInstance(char[] passwd) {
+	public static DecryptCore getInstance(char[] password) {
 		if(instance==null) {
 			instance=new DecryptCore();
 		}
-		instance.password=passwd;
+		instance.password=password;
 		return instance;
 	}
 	public void decryptFile(File decryptfile,File outputPath) throws Exception{

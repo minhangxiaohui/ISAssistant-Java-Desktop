@@ -23,11 +23,11 @@ public class EncryptCore {
 	private FileOutputStream outputStream;
 	private EncryptCore(){}
 	
-	public static EncryptCore getInstance(char[] passwd,int keyLengthByByte) {
+	public static EncryptCore getInstance(char[] password,int keyLengthByByte) {
 		if(instance==null) {
 			instance=new EncryptCore();
 		}
-		instance.password=passwd;
+		instance.password=password;
 		instance.keyLengthByByte=keyLengthByByte;
 		return instance;
 	}
