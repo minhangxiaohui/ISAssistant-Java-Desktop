@@ -15,8 +15,6 @@ import cn.xiaolulwr.isassistant.common.KeyStoreManager;
 import cn.xiaolulwr.isassistant.common.ParentFrameInterface;
 import cn.xiaolulwr.isassistant.crypto.DecryptCore;
 import cn.xiaolulwr.isassistant.crypto.EncryptCore;
-import cn.xiaolulwr.isassistant.sign.SetPasswordDialog;
-import cn.xiaolulwr.isassistant.sign.VerifyPasswordDialog;
 
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;

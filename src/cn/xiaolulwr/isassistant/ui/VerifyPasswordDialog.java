@@ -1,4 +1,4 @@
-package cn.xiaolulwr.isassistant.sign;
+package cn.xiaolulwr.isassistant.ui;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
@@ -7,33 +7,29 @@ import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
+import javax.swing.JLabel;
+import javax.swing.JPasswordField;
 
 import cn.xiaolulwr.isassistant.common.ParentFrameInterface;
-
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPasswordField;
 import java.awt.event.ActionListener;
-import java.util.Arrays;
 import java.awt.event.ActionEvent;
 
-public class SetPasswordDialog extends JDialog {
+public class VerifyPasswordDialog extends JDialog {
 
 	private static final long serialVersionUID = 1L;
 	private ParentFrameInterface parent;
-	
+
 	private final JPanel contentPanel = new JPanel();
-	private JPasswordField passwordFieldSet;
-	private JPasswordField passwordFieldConfirm;
+	private JPasswordField passwordFieldVerify;
 
 
 	/**
 	 * Create the dialog.
 	 */
-	public SetPasswordDialog() {
-		setTitle("设置密码");
+	public VerifyPasswordDialog() {
+		setTitle("验证密码");
 		setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-		setBounds(100, 100, 300, 200);
+		setBounds(100, 100, 300, 150);
 		getContentPane().setLayout(new BorderLayout());
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		getContentPane().add(contentPanel, BorderLayout.CENTER);
@@ -42,18 +38,11 @@ public class SetPasswordDialog extends JDialog {
 		JLabel lblNewLabel = new JLabel("密码");
 		lblNewLabel.setBounds(32, 36, 36, 16);
 		contentPanel.add(lblNewLabel);
-		
-		passwordFieldSet = new JPasswordField();
-		passwordFieldSet.setBounds(69, 31, 193, 26);
-		contentPanel.add(passwordFieldSet);
-		
-		passwordFieldConfirm = new JPasswordField();
-		passwordFieldConfirm.setBounds(69, 85, 193, 26);
-		contentPanel.add(passwordFieldConfirm);
-		
-		JLabel label = new JLabel("确认");
-		label.setBounds(32, 90, 36, 16);
-		contentPanel.add(label);
+		{
+			passwordFieldVerify = new JPasswordField();
+			passwordFieldVerify.setBounds(68, 31, 193, 26);
+			contentPanel.add(passwordFieldVerify);
+		}
 		{
 			JPanel buttonPane = new JPanel();
 			buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
@@ -62,18 +51,8 @@ public class SetPasswordDialog extends JDialog {
 				JButton okButton = new JButton("好");
 				okButton.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						char[] password=passwordFieldSet.getPassword();
-						char[] passwordConfirm=passwordFieldConfirm.getPassword();
-						if(password.length<6 || password.length>16) {
-							JOptionPane.showMessageDialog(null,"密码长度必须介于6-16位之间","错误",JOptionPane.ERROR_MESSAGE);
-							return;
-						}
-						if(!Arrays.equals(password, passwordConfirm)) {
-							JOptionPane.showMessageDialog(null,"两次密码输入不一致","错误",JOptionPane.ERROR_MESSAGE);
-							return;
-						}
 						dispose();
-						parent.didSetPasswordDialogOkButtonClicked(this, passwordConfirm);
+						parent.didVerifyPasswordDialogOkButtonClicked(this, passwordFieldVerify.getPassword());
 					}
 				});
 				okButton.setActionCommand("OK");
@@ -84,8 +63,7 @@ public class SetPasswordDialog extends JDialog {
 				JButton cancelButton = new JButton("取消");
 				cancelButton.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						passwordFieldSet.setText("");
-						passwordFieldConfirm.setText("");
+						passwordFieldVerify.setText("");
 						dispose();
 					}
 				});
@@ -94,7 +72,6 @@ public class SetPasswordDialog extends JDialog {
 			}
 		}
 	}
-
 	public void setParent(ParentFrameInterface parent) {
 		this.parent = parent;
 	}
