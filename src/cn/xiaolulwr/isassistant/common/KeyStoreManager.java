@@ -82,7 +82,11 @@ public class KeyStoreManager {
 		} 
 		catch (Exception e) {
 			FileInputStream in=new FileInputStream(keystoreFile);
-			keystoreInst.load(in, password);
+			try {
+				keystoreInst.load(in, password);
+			} catch (Exception exc) {
+				throw new Exception("密钥库不合法或密码错误");
+			}
 			KeyPairGenerator generator=KeyPairGenerator.getInstance(algorithm.split("with")[1]);
 			KeyPair pair=generator.generateKeyPair();
 			long nowTime=System.currentTimeMillis();

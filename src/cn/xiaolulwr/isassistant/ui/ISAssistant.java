@@ -12,6 +12,7 @@ import cn.xiaolulwr.isassistant.common.KeyStoreManager;
 import cn.xiaolulwr.isassistant.common.ParentFrameInterface;
 import cn.xiaolulwr.isassistant.crypto.DecryptCore;
 import cn.xiaolulwr.isassistant.crypto.EncryptCore;
+import cn.xiaolulwr.isassistant.hash.DigestCore;
 import cn.xiaolulwr.isassistant.sign.DigitalSignCore;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
@@ -61,8 +62,11 @@ public class ISAssistant extends JFrame implements ActionListener,ParentFrameInt
 	private JCheckBox checkBoxIsVerify;
 	private JComboBox<HashAlgorithm> comboBoxHash;
 	private JComboBox<DigitalSignatureAlgorithm> comboBoxDigitalSign;
-	private JCheckBox checkBoxIsVerifyHash;
 	private JCheckBox checkBoxIsUseSha3;
+	private JLabel labelHash224;
+	private JLabel labelHash256;
+	private JLabel labelHash384;
+	private JLabel labelHash512;
 	/**
 	 * Launch the application.
 	 */
@@ -80,9 +84,6 @@ public class ISAssistant extends JFrame implements ActionListener,ParentFrameInt
 		});
 	}
 
-	/**
-	 * Create the frame.
-	 */
 	public ISAssistant() {
 		setResizable(false);
 		setTitle("信息安全助手");
@@ -346,7 +347,7 @@ public class ISAssistant extends JFrame implements ActionListener,ParentFrameInt
 		btnHashSelect.setBounds(374, 22, 75, 29);
 		panelHash.add(btnHashSelect);
 		
-		btnHash = new JButton("计算消息摘要");
+		btnHash = new JButton("开始计算");
 		btnHash.addActionListener(this);
 		btnHash.setBounds(102, 272, 117, 29);
 		panelHash.add(btnHash);
@@ -357,48 +358,49 @@ public class ISAssistant extends JFrame implements ActionListener,ParentFrameInt
 		panelHash.add(btnHashReset);
 		
 		textField224Value = new JTextField();
+		textField224Value.setEditable(false);
 		textField224Value.setBounds(92, 96, 281, 26);
 		panelHash.add(textField224Value);
 		textField224Value.setColumns(10);
 		
 		textField256Value = new JTextField();
+		textField256Value.setEditable(false);
 		textField256Value.setColumns(10);
 		textField256Value.setBounds(92, 134, 281, 26);
 		panelHash.add(textField256Value);
 		
 		textField384Value = new JTextField();
+		textField384Value.setEditable(false);
 		textField384Value.setColumns(10);
 		textField384Value.setBounds(92, 172, 281, 26);
 		panelHash.add(textField384Value);
 		
 		textField512Value = new JTextField();
+		textField512Value.setEditable(false);
 		textField512Value.setColumns(10);
 		textField512Value.setBounds(92, 210, 281, 26);
 		panelHash.add(textField512Value);
 		
-		JLabel lblSha = new JLabel("SHA-224");
-		lblSha.setBounds(21, 101, 69, 16);
-		panelHash.add(lblSha);
+		labelHash224 = new JLabel("SHA-224");
+		labelHash224.setBounds(21, 101, 69, 16);
+		panelHash.add(labelHash224);
 		
-		JLabel lblSha_1 = new JLabel("SHA-256");
-		lblSha_1.setBounds(21, 139, 69, 16);
-		panelHash.add(lblSha_1);
+		labelHash256 = new JLabel("SHA-256");
+		labelHash256.setBounds(21, 139, 69, 16);
+		panelHash.add(labelHash256);
 		
-		JLabel lblSha_2 = new JLabel("SHA-384");
-		lblSha_2.setBounds(21, 177, 69, 16);
-		panelHash.add(lblSha_2);
+		labelHash384 = new JLabel("SHA-384");
+		labelHash384.setBounds(21, 177, 69, 16);
+		panelHash.add(labelHash384);
 		
-		JLabel lblSha_3 = new JLabel("SHA-512");
-		lblSha_3.setBounds(21, 215, 69, 16);
-		panelHash.add(lblSha_3);
+		labelHash512 = new JLabel("SHA-512");
+		labelHash512.setBounds(21, 215, 69, 16);
+		panelHash.add(labelHash512);
 		
 		checkBoxIsUseSha3 = new JCheckBox("使用SHA-3算法");
-		checkBoxIsUseSha3.setBounds(102, 60, 128, 23);
+		checkBoxIsUseSha3.addActionListener(this);
+		checkBoxIsUseSha3.setBounds(170, 60, 128, 23);
 		panelHash.add(checkBoxIsUseSha3);
-		
-		checkBoxIsVerifyHash = new JCheckBox("验证HASH值");
-		checkBoxIsVerifyHash.setBounds(241, 60, 128, 23);
-		panelHash.add(checkBoxIsVerifyHash);
 		
 		JPanel panelMac = new JPanel();
 		panelMac.setBackground(bgColor);
@@ -432,155 +434,85 @@ public class ISAssistant extends JFrame implements ActionListener,ParentFrameInt
 
 	public void actionPerformed(ActionEvent e) {
 		if(e.getActionCommand().equals("浏览") || e.getActionCommand().equals("打开文件")) {
-			JFileChooser fileChooser=new JFileChooser();
-			if(fileChooser.showOpenDialog(this)==JFileChooser.APPROVE_OPTION) {
-				workingFile=fileChooser.getSelectedFile();
-				this.setFilePath(workingFile.getAbsolutePath());
-			}
+			this.selectWorkingFile();
 		}
 		else if(e.getActionCommand().equals("新建密钥库")) {
-			JFileChooser fileChooser=new JFileChooser();
-			if(fileChooser.showSaveDialog(this)==JFileChooser.APPROVE_OPTION) {
-				keystoreFile=fileChooser.getSelectedFile();
-				SetPasswordDialog dialog=new SetPasswordDialog();
-				dialog.setParent(this);
-				dialog.setAlwaysOnTop(true);
-				dialog.setVisible(true);
-			}
+			this.createKeyStore();
 		}
 		else if(e.getActionCommand().equals("打开密钥库")) {
-			JFileChooser fileChooser=new JFileChooser();
-			if(fileChooser.showOpenDialog(this)==JFileChooser.APPROVE_OPTION) {
-				keystoreFile=fileChooser.getSelectedFile();
-				VerifyPasswordDialog dialog=new VerifyPasswordDialog();
-				dialog.setParent(this);
-				dialog.setAlwaysOnTop(true);
-				dialog.setVisible(true);
-			}
+			this.openKeyStore();
 		}
 		else if(e.getActionCommand().equals("重置")) {
-			workingFile=null;
-			this.setFilePath("");
-			textField224Value.setText("");
-			textField256Value.setText("");
-			textField384Value.setText("");
-			textField512Value.setText("");
-			passwordFieldCheck.setText("");
-			passwordFieldConfirm.setText("");
-			passwordFieldSet.setText("");
-			textFieldSignValue.setText("");
-			textFieldMacMessage.setText("");
+			this.reset();
 		}
 		else if(e.getActionCommand().equals("关闭文件")) {
-			workingFile=null;
-			this.setFilePath("");
-			JOptionPane.showMessageDialog(this,"文件已关闭","提示",JOptionPane.INFORMATION_MESSAGE);
+			this.closeFile();
 		}
 		else if(e.getActionCommand().equals("关闭密钥库")) {
-			keystoreFile=null;
-			ksmanager=null;
-			JOptionPane.showMessageDialog(this,"密钥库已关闭","提示",JOptionPane.INFORMATION_MESSAGE);
+			this.closeKeyStore();
 		}
 		else if(e.getSource()==btnEncrypt) {	
-			if(workingFile==null) {
-				JOptionPane.showMessageDialog(this,"请选择文件","错误",JOptionPane.ERROR_MESSAGE);
-				return;
-			}
-			char[] password=passwordFieldSet.getPassword();
-			char[] passwordConfirm=passwordFieldConfirm.getPassword();
-			if(password.length<6 || password.length>16) {
-				JOptionPane.showMessageDialog(this,"密码长度必须介于6-16位之间","错误",JOptionPane.ERROR_MESSAGE);
-				return;
-			}
-			if(!Arrays.equals(password, passwordConfirm)) {
-				JOptionPane.showMessageDialog(this,"两次密码输入不一致","错误",JOptionPane.ERROR_MESSAGE);
-				return;
-			}
-			int keyLength=(sliderEncryptMode.getValue()/2+1)*16;
-			EncryptCore core=EncryptCore.getInstance(passwordConfirm, keyLength);
-			try {
-				core.encryptFile(workingFile);
-				core.clean();
-				JOptionPane.showMessageDialog(this,"加密完成","温馨提示",JOptionPane.INFORMATION_MESSAGE);
-			} 
-			catch (Exception exc) {
-				exc.printStackTrace();
-				JOptionPane.showMessageDialog(this,exc.toString(),"内部错误",JOptionPane.ERROR_MESSAGE);
-			}
+			this.encryptFile();
 		}
 		else if(e.getSource()==btnDecrypt) {
-			if(workingFile==null) {
-				JOptionPane.showMessageDialog(this,"请选择文件","错误",JOptionPane.ERROR_MESSAGE);
-				return;
-			}
-			JFileChooser fileChooser=new JFileChooser();
-			File output;
-			if(fileChooser.showSaveDialog(this)==JFileChooser.APPROVE_OPTION) {
-				output=fileChooser.getSelectedFile();
-			}
-			else {
-				return;
-			}
-			char[] password=passwordFieldCheck.getPassword();
-			DecryptCore core=DecryptCore.getInstance(password);
-			try {
-				core.decryptFile(workingFile,output);
-				core.clean();
-				JOptionPane.showMessageDialog(this,"解密完成","温馨提示",JOptionPane.INFORMATION_MESSAGE);
-			} 
-			catch (Exception exc) {
-				exc.printStackTrace();
-				JOptionPane.showMessageDialog(this,exc.getMessage(),"错误",JOptionPane.ERROR_MESSAGE);
-			}
+			this.decryptFile();
 		}
 		else if(e.getSource()==checkBoxIsVerify) {
-			if(checkBoxIsVerify.isSelected()) {
-				btnSign.setText("开始验证");
-				textFieldSignValue.setEditable(true);
-			}
-			else {
-				btnSign.setText("开始签名");
-				textFieldSignValue.setEditable(false);
-			}
+			this.verifyModeChanged();
 		}
 		else if(e.getSource()==btnSign) {
-			if(workingFile==null) {
-				JOptionPane.showMessageDialog(this,"请选择文件","错误",JOptionPane.ERROR_MESSAGE);
-				return;
-			}
-			if(keystoreFile==null || ksmanager==null) {
-				JOptionPane.showMessageDialog(this,"未选择密钥库","错误",JOptionPane.ERROR_MESSAGE);
-				return;
-			}
-			String hashAlgorithm=comboBoxHash.getSelectedItem().toString();
-			String digitalSign=comboBoxDigitalSign.getSelectedItem().toString();
-			String algorithm=hashAlgorithm+"with"+digitalSign;
-			try {
-				if(e.getActionCommand().equals("开始签名")) {
-					DigitalSignCore core=DigitalSignCore.getInstance(algorithm, ksmanager);
-					String signValue=core.signFile(workingFile);
-					textFieldSignValue.setText(signValue);
-					JOptionPane.showMessageDialog(this,"签名完成","完成",JOptionPane.INFORMATION_MESSAGE);
-				}
-				else if(e.getActionCommand().equals("开始验证")) {
-					DigitalSignCore core=DigitalSignCore.getInstance(algorithm, ksmanager);
-					boolean isSigned=core.verifyFile(workingFile,textFieldSignValue.getText());
-					if(isSigned==true) {
-						JOptionPane.showMessageDialog(this,"签名验证通过","完成",JOptionPane.INFORMATION_MESSAGE);
-					}
-					else {
-						throw new Exception("签名验证失败");
-					}
-				}
-			} catch (Exception exc) {
-				exc.printStackTrace();
-				JOptionPane.showMessageDialog(this,exc.getMessage(),"错误",JOptionPane.ERROR_MESSAGE);
-			}
+			this.signFile();
 		}
-		//else if(e.getSource()==)
+		else if(e.getSource()==checkBoxIsUseSha3) {
+			this.hashModeChanged();
+		}
+		else if(e.getSource()==btnHash) {
+			this.getHashValue();
+		}
 		else {
 			System.out.println(e.getActionCommand());
 		}
+	}
+	
+	public void selectWorkingFile() {
+		JFileChooser fileChooser=new JFileChooser();
+		if(fileChooser.showOpenDialog(this)==JFileChooser.APPROVE_OPTION) {
+			workingFile=fileChooser.getSelectedFile();
+			this.setFilePath(workingFile.getAbsolutePath());
+		}
+	}
+	public void createKeyStore() {
+		JFileChooser fileChooser=new JFileChooser();
+		if(fileChooser.showSaveDialog(this)==JFileChooser.APPROVE_OPTION) {
+			keystoreFile=fileChooser.getSelectedFile();
+			SetPasswordDialog dialog=new SetPasswordDialog();
+			dialog.setParent(this);
+			dialog.setAlwaysOnTop(true);
+			dialog.setVisible(true);
+		}
+	}
+	public void openKeyStore() {
+		JFileChooser fileChooser=new JFileChooser();
+		if(fileChooser.showOpenDialog(this)==JFileChooser.APPROVE_OPTION) {
+			keystoreFile=fileChooser.getSelectedFile();
+			VerifyPasswordDialog dialog=new VerifyPasswordDialog();
+			dialog.setParent(this);
+			dialog.setAlwaysOnTop(true);
+			dialog.setVisible(true);
+		}
+	}
+	public void reset() {
+		workingFile=null;
+		this.setFilePath("");
+		textField224Value.setText("");
+		textField256Value.setText("");
+		textField384Value.setText("");
+		textField512Value.setText("");
+		passwordFieldCheck.setText("");
+		passwordFieldConfirm.setText("");
+		passwordFieldSet.setText("");
+		textFieldSignValue.setText("");
+		textFieldMacMessage.setText("");
 	}
 	public void setFilePath(String path) {
 		textFieldEncryptFile.setText(path);
@@ -589,12 +521,172 @@ public class ISAssistant extends JFrame implements ActionListener,ParentFrameInt
 		textFieldHashMessage.setText(path);
 		textFieldMacMessage.setText(path);
 	}
-
+	public void closeFile() {
+		workingFile=null;
+		this.setFilePath("");
+		JOptionPane.showMessageDialog(this,"文件已关闭","提示",JOptionPane.INFORMATION_MESSAGE);
+	}
+	public void closeKeyStore() {
+		keystoreFile=null;
+		ksmanager=null;
+		JOptionPane.showMessageDialog(this,"密钥库已关闭","提示",JOptionPane.INFORMATION_MESSAGE);
+	}
+	public void encryptFile() {
+		if(workingFile==null) {
+			JOptionPane.showMessageDialog(this,"请选择文件","错误",JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+		char[] password=passwordFieldSet.getPassword();
+		char[] passwordConfirm=passwordFieldConfirm.getPassword();
+		if(password.length<6 || password.length>16) {
+			JOptionPane.showMessageDialog(this,"密码长度必须介于6-16位之间","错误",JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+		if(!Arrays.equals(password, passwordConfirm)) {
+			JOptionPane.showMessageDialog(this,"两次密码输入不一致","错误",JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+		int keyLength=(sliderEncryptMode.getValue()/2+1)*16;
+		EncryptCore core=EncryptCore.getInstance(passwordConfirm, keyLength);
+		try {
+			core.encryptFile(workingFile);
+			core.clean();
+			JOptionPane.showMessageDialog(this,"加密完成","温馨提示",JOptionPane.INFORMATION_MESSAGE);
+		} 
+		catch (Exception exc) {
+			exc.printStackTrace();
+			JOptionPane.showMessageDialog(this,exc.getMessage(),"错误",JOptionPane.ERROR_MESSAGE);
+		}
+	}
+	public void decryptFile() {
+		if(workingFile==null) {
+			JOptionPane.showMessageDialog(this,"请选择文件","错误",JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+		JFileChooser fileChooser=new JFileChooser();
+		File output;
+		if(fileChooser.showSaveDialog(this)==JFileChooser.APPROVE_OPTION) {
+			output=fileChooser.getSelectedFile();
+		}
+		else {
+			return;
+		}
+		char[] password=passwordFieldCheck.getPassword();
+		DecryptCore core=DecryptCore.getInstance(password);
+		try {
+			core.decryptFile(workingFile,output);
+			core.clean();
+			JOptionPane.showMessageDialog(this,"解密完成","温馨提示",JOptionPane.INFORMATION_MESSAGE);
+		} 
+		catch (Exception exc) {
+			exc.printStackTrace();
+			JOptionPane.showMessageDialog(this,exc.getMessage(),"错误",JOptionPane.ERROR_MESSAGE);
+		}
+	}
+	public void verifyModeChanged() {
+		if(checkBoxIsVerify.isSelected()) {
+			btnSign.setText("开始验证");
+			textFieldSignValue.setEditable(true);
+		}
+		else {
+			btnSign.setText("开始签名");
+			textFieldSignValue.setEditable(false);
+		}
+	}
+	public void signFile() {
+		if(workingFile==null) {
+			JOptionPane.showMessageDialog(this,"请选择文件","错误",JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+		if(keystoreFile==null || ksmanager==null) {
+			JOptionPane.showMessageDialog(this,"未选择密钥库","错误",JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+		String hashAlgorithm=comboBoxHash.getSelectedItem().toString();
+		String digitalSign=comboBoxDigitalSign.getSelectedItem().toString();
+		String algorithm=hashAlgorithm+"with"+digitalSign;
+		try {
+			if(btnSign.getText().equals("开始签名")) {
+				DigitalSignCore core=DigitalSignCore.getInstance(algorithm, ksmanager);
+				String signValue=core.signFile(workingFile);
+				textFieldSignValue.setText(signValue);
+				JOptionPane.showMessageDialog(this,"签名完成","完成",JOptionPane.INFORMATION_MESSAGE);
+			}
+			else if(btnSign.getText().equals("开始验证")) {
+				DigitalSignCore core=DigitalSignCore.getInstance(algorithm, ksmanager);
+				boolean isSigned=core.verifyFile(workingFile,textFieldSignValue.getText());
+				if(isSigned==true) {
+					JOptionPane.showMessageDialog(this,"签名验证通过","完成",JOptionPane.INFORMATION_MESSAGE);
+				}
+				else {
+					throw new Exception("签名验证失败");
+				}
+			}
+		} catch (Exception exc) {
+			exc.printStackTrace();
+			JOptionPane.showMessageDialog(this,exc.getMessage(),"错误",JOptionPane.ERROR_MESSAGE);
+		}
+	}
+	public void hashModeChanged() {
+		if(checkBoxIsUseSha3.isSelected()==true) {
+			labelHash224.setText("SHA3-224");
+			labelHash256.setText("SHA3-256");
+			labelHash384.setText("SHA3-384");
+			labelHash512.setText("SHA3-512");
+		}
+		else {
+			labelHash224.setText("SHA-224");
+			labelHash256.setText("SHA-256");
+			labelHash384.setText("SHA-384");
+			labelHash512.setText("SHA-512");
+		}
+	}
+	public void getHashValue() {
+		try {
+			String algorithm;
+			DigestCore core;
+			if(btnHash.getText().equals("开始计算")) {
+				if(workingFile==null) {
+					algorithm=labelHash224.getText();
+					core=DigestCore.getInstance(algorithm);
+					textField224Value.setText(core.getHashValue(textFieldHashMessage.getText()));
+					algorithm=labelHash256.getText();
+					core=DigestCore.getInstance(algorithm);
+					textField256Value.setText(core.getHashValue(textFieldHashMessage.getText()));
+					algorithm=labelHash384.getText();
+					core=DigestCore.getInstance(algorithm);
+					textField384Value.setText(core.getHashValue(textFieldHashMessage.getText()));
+					algorithm=labelHash512.getText();
+					core=DigestCore.getInstance(algorithm);
+					textField512Value.setText(core.getHashValue(textFieldHashMessage.getText()));
+				}
+				else {
+					algorithm=labelHash224.getText();
+					core=DigestCore.getInstance(algorithm);
+					textField224Value.setText(core.getHashValue(workingFile));
+					algorithm=labelHash256.getText();
+					core=DigestCore.getInstance(algorithm);
+					textField256Value.setText(core.getHashValue(workingFile));
+					algorithm=labelHash384.getText();
+					core=DigestCore.getInstance(algorithm);
+					textField384Value.setText(core.getHashValue(workingFile));
+					algorithm=labelHash512.getText();
+					core=DigestCore.getInstance(algorithm);
+					textField512Value.setText(core.getHashValue(workingFile));
+				}
+			}
+		} catch (Exception exc) {
+			exc.printStackTrace();
+			JOptionPane.showMessageDialog(this,exc.getMessage(),"错误",JOptionPane.ERROR_MESSAGE);
+		}
+	}
 	public void didVerifyPasswordDialogOkButtonClicked(Object sender, char[] password) {
 		try {
 			ksmanager=KeyStoreManager.getInstance();
 			ksmanager.openKeyStoreFromFile(keystoreFile, password);
-		} catch (Exception e) {
+			JOptionPane.showMessageDialog(this,"文件已加载","提示",JOptionPane.INFORMATION_MESSAGE);
+		} 
+		catch (Exception e) {
 			e.printStackTrace();
 			JOptionPane.showMessageDialog(this,e.getMessage(),"错误",JOptionPane.ERROR_MESSAGE);
 		}
@@ -603,7 +695,9 @@ public class ISAssistant extends JFrame implements ActionListener,ParentFrameInt
 		try {
 			ksmanager=KeyStoreManager.getInstance();
 			ksmanager.createKeyStore(keystoreFile, password);
-		} catch (Exception e) {
+			JOptionPane.showMessageDialog(this,"密钥库已创建","提示",JOptionPane.INFORMATION_MESSAGE);
+		} 
+		catch (Exception e) {
 			e.printStackTrace();
 		}
 	}

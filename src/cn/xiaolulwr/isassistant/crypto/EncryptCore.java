@@ -32,8 +32,8 @@ public class EncryptCore {
 		return instance;
 	}
 	
-	public void encryptFile(File encryptfile) throws Exception {
-		this.openFileToEncrypt(encryptfile);
+	public void encryptFile(File encryptFile) throws Exception {
+		this.openFileToEncrypt(encryptFile);
 		SecretKey key=getKeyByPassword();
 		IvParameterSpec iv=getIvByCurrentTime();
 		Cipher cipher=Cipher.getInstance("AES/CFB/PKCS5Padding");
@@ -42,9 +42,9 @@ public class EncryptCore {
 		writeEncryptFile(ci);
 	}
 
-	private void openFileToEncrypt(File encryptfile) throws Exception{
-		inputStream=new FileInputStream(encryptfile);
-		String encryptFileName=encryptfile.getPath()+".xiaolulwrcrypto";
+	private void openFileToEncrypt(File encryptFile) throws Exception{
+		inputStream=new FileInputStream(encryptFile);
+		String encryptFileName=encryptFile.getPath()+".xiaolulwrcrypto";
 		outputStream=new FileOutputStream(encryptFileName);
 		outputStream.write(encryptFileID.getBytes());
 	}

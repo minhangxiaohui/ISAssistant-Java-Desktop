@@ -27,8 +27,8 @@ public class DecryptCore {
 		instance.password=password;
 		return instance;
 	}
-	public void decryptFile(File decryptfile,File outputPath) throws Exception{
-		openFileToDecrypt(decryptfile,outputPath);
+	public void decryptFile(File decryptFile,File outputFile) throws Exception{
+		openFileToDecrypt(decryptFile,outputFile);
 		byte[] idValue=new byte[encryptFileID.getBytes().length];
 		inputStream.read(idValue);
 		String idToCheck=new String(idValue);
@@ -43,9 +43,9 @@ public class DecryptCore {
 		writeDecryptFile(ci);
 	}
 	
-	private void openFileToDecrypt(File decryptFile,File outputPath) throws Exception {
+	private void openFileToDecrypt(File decryptFile,File outputFile) throws Exception {
 		inputStream=new FileInputStream(decryptFile);
-		outputStream=new FileOutputStream(outputPath);
+		outputStream=new FileOutputStream(outputFile);
 	}
 	
 	private SecretKey getKeyByPassword() throws Exception {
