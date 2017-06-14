@@ -10,8 +10,7 @@ import cn.xiaolulwr.isassistant.common.DigitalSignatureAlgorithm;
 import cn.xiaolulwr.isassistant.common.HashAlgorithm;
 import cn.xiaolulwr.isassistant.common.KeyStoreManager;
 import cn.xiaolulwr.isassistant.common.ParentFrameInterface;
-import cn.xiaolulwr.isassistant.crypto.DecryptCore;
-import cn.xiaolulwr.isassistant.crypto.EncryptCore;
+import cn.xiaolulwr.isassistant.crypto.CryptoCore;
 import cn.xiaolulwr.isassistant.hash.DigestCore;
 import cn.xiaolulwr.isassistant.sign.DigitalSignCore;
 import javax.swing.JTabbedPane;
@@ -536,6 +535,14 @@ public class ISAssistant extends JFrame implements ActionListener,ParentFrameInt
 			JOptionPane.showMessageDialog(this,"请选择文件","错误",JOptionPane.ERROR_MESSAGE);
 			return;
 		}
+		JFileChooser fileChooser=new JFileChooser();
+		File output;
+		if(fileChooser.showSaveDialog(this)==JFileChooser.APPROVE_OPTION) {
+			output=fileChooser.getSelectedFile();
+		}
+		else {
+			return;
+		}
 		char[] password=passwordFieldSet.getPassword();
 		char[] passwordConfirm=passwordFieldConfirm.getPassword();
 		if(password.length<6 || password.length>16) {
@@ -547,11 +554,11 @@ public class ISAssistant extends JFrame implements ActionListener,ParentFrameInt
 			return;
 		}
 		int keyLength=(sliderEncryptMode.getValue()/2+1)*16;
-		EncryptCore core=EncryptCore.getInstance(passwordConfirm, keyLength);
+		CryptoCore core=CryptoCore.getInstance();
 		try {
-			core.encryptFile(workingFile);
+			core.encryptFile(workingFile, passwordConfirm, keyLength, output);
 			core.clean();
-			JOptionPane.showMessageDialog(this,"加密完成","温馨提示",JOptionPane.INFORMATION_MESSAGE);
+			JOptionPane.showMessageDialog(this,"加密完成","提示",JOptionPane.INFORMATION_MESSAGE);
 		} 
 		catch (Exception exc) {
 			exc.printStackTrace();
@@ -572,11 +579,11 @@ public class ISAssistant extends JFrame implements ActionListener,ParentFrameInt
 			return;
 		}
 		char[] password=passwordFieldCheck.getPassword();
-		DecryptCore core=DecryptCore.getInstance(password);
+		CryptoCore core=CryptoCore.getInstance();
 		try {
-			core.decryptFile(workingFile,output);
+			core.decryptFile(workingFile,password,output);
 			core.clean();
-			JOptionPane.showMessageDialog(this,"解密完成","温馨提示",JOptionPane.INFORMATION_MESSAGE);
+			JOptionPane.showMessageDialog(this,"解密完成","提示",JOptionPane.INFORMATION_MESSAGE);
 		} 
 		catch (Exception exc) {
 			exc.printStackTrace();
