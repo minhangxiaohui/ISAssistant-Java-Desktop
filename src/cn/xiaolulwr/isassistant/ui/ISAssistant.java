@@ -2,20 +2,17 @@ package cn.xiaolulwr.isassistant.ui;
 
 import java.awt.Color;
 import java.awt.EventQueue;
-
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
-
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-
 import cn.xiaolulwr.isassistant.common.DigitalSignatureAlgorithm;
 import cn.xiaolulwr.isassistant.common.HashAlgorithm;
 import cn.xiaolulwr.isassistant.common.KeyStoreManager;
 import cn.xiaolulwr.isassistant.common.ParentFrameInterface;
 import cn.xiaolulwr.isassistant.crypto.DecryptCore;
 import cn.xiaolulwr.isassistant.crypto.EncryptCore;
-
+import cn.xiaolulwr.isassistant.sign.DigitalSignCore;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.JLabel;
@@ -24,13 +21,11 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
-
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.security.Security;
 import java.util.Arrays;
 import java.awt.event.ActionEvent;
-
 import javax.swing.JPasswordField;
 import javax.swing.JSlider;
 import javax.swing.JCheckBox;
@@ -40,10 +35,9 @@ import javax.swing.DefaultComboBoxModel;
 
 public class ISAssistant extends JFrame implements ActionListener,ParentFrameInterface {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
+	private File workingFile,keystoreFile;
+	private KeyStoreManager ksmanager;
 	private JPanel contentPane;
 	private JTextField textFieldEncryptFile;
 	private JPasswordField passwordFieldSet;
@@ -58,9 +52,6 @@ public class ISAssistant extends JFrame implements ActionListener,ParentFrameInt
 	private JTextField textField256Value;
 	private JTextField textField384Value;
 	private JTextField textField512Value;
-	
-	private File workingFile,keystoreFile;
-	private KeyStoreManager ksmanager;
 	private JButton btnEncrypt;
 	private JButton btnSign;
 	private JButton btnHash;
@@ -70,6 +61,8 @@ public class ISAssistant extends JFrame implements ActionListener,ParentFrameInt
 	private JCheckBox checkBoxIsVerify;
 	private JComboBox<HashAlgorithm> comboBoxHash;
 	private JComboBox<DigitalSignatureAlgorithm> comboBoxDigitalSign;
+	private JCheckBox checkBoxIsVerifyHash;
+	private JCheckBox checkBoxIsUseSha3;
 	/**
 	 * Launch the application.
 	 */
@@ -95,6 +88,7 @@ public class ISAssistant extends JFrame implements ActionListener,ParentFrameInt
 		setTitle("信息安全助手");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 500, 423);
+		setLocationRelativeTo(null);
 		
 		JMenuBar menuBar = new JMenuBar();
 		setJMenuBar(menuBar);
@@ -146,7 +140,7 @@ public class ISAssistant extends JFrame implements ActionListener,ParentFrameInt
 		contentPane.setLayout(null);
 		
 		JTabbedPane tabbedPaneMain = new JTabbedPane(JTabbedPane.TOP);
-		tabbedPaneMain.setBounds(5, 5, 490, 370);
+		tabbedPaneMain.setBounds(6, 6, 490, 370);
 		contentPane.add(tabbedPaneMain);
 		
 		Color bgColor=new Color(229, 229, 229);
@@ -296,6 +290,7 @@ public class ISAssistant extends JFrame implements ActionListener,ParentFrameInt
 		panelSign.add(checkBoxIsVerify);
 		
 		textFieldSignValue = new JTextField();
+		textFieldSignValue.setEditable(false);
 		textFieldSignValue.setBounds(92, 159, 281, 26);
 		panelSign.add(textFieldSignValue);
 		textFieldSignValue.setColumns(10);
@@ -397,9 +392,13 @@ public class ISAssistant extends JFrame implements ActionListener,ParentFrameInt
 		lblSha_3.setBounds(21, 215, 69, 16);
 		panelHash.add(lblSha_3);
 		
-		JCheckBox checkboxIsUseSha3 = new JCheckBox("使用SHA-3算法");
-		checkboxIsUseSha3.setBounds(162, 61, 128, 23);
-		panelHash.add(checkboxIsUseSha3);
+		checkBoxIsUseSha3 = new JCheckBox("使用SHA-3算法");
+		checkBoxIsUseSha3.setBounds(102, 60, 128, 23);
+		panelHash.add(checkBoxIsUseSha3);
+		
+		checkBoxIsVerifyHash = new JCheckBox("验证HASH值");
+		checkBoxIsVerifyHash.setBounds(241, 60, 128, 23);
+		panelHash.add(checkBoxIsVerifyHash);
 		
 		JPanel panelMac = new JPanel();
 		panelMac.setBackground(bgColor);
@@ -469,6 +468,8 @@ public class ISAssistant extends JFrame implements ActionListener,ParentFrameInt
 			passwordFieldCheck.setText("");
 			passwordFieldConfirm.setText("");
 			passwordFieldSet.setText("");
+			textFieldSignValue.setText("");
+			textFieldMacMessage.setText("");
 		}
 		else if(e.getActionCommand().equals("关闭文件")) {
 			workingFile=null;
@@ -477,14 +478,7 @@ public class ISAssistant extends JFrame implements ActionListener,ParentFrameInt
 		}
 		else if(e.getActionCommand().equals("关闭密钥库")) {
 			keystoreFile=null;
-			if(ksmanager!=null) {
-				try {
-					ksmanager.clean();
-				} catch (Exception exc) {
-					exc.printStackTrace();
-					JOptionPane.showMessageDialog(this,exc.getMessage(),"错误",JOptionPane.ERROR_MESSAGE);
-				}
-			}
+			ksmanager=null;
 			JOptionPane.showMessageDialog(this,"密钥库已关闭","提示",JOptionPane.INFORMATION_MESSAGE);
 		}
 		else if(e.getSource()==btnEncrypt) {	
@@ -550,8 +544,40 @@ public class ISAssistant extends JFrame implements ActionListener,ParentFrameInt
 			}
 		}
 		else if(e.getSource()==btnSign) {
-			
+			if(workingFile==null) {
+				JOptionPane.showMessageDialog(this,"请选择文件","错误",JOptionPane.ERROR_MESSAGE);
+				return;
+			}
+			if(keystoreFile==null || ksmanager==null) {
+				JOptionPane.showMessageDialog(this,"未选择密钥库","错误",JOptionPane.ERROR_MESSAGE);
+				return;
+			}
+			String hashAlgorithm=comboBoxHash.getSelectedItem().toString();
+			String digitalSign=comboBoxDigitalSign.getSelectedItem().toString();
+			String algorithm=hashAlgorithm+"with"+digitalSign;
+			try {
+				if(e.getActionCommand().equals("开始签名")) {
+					DigitalSignCore core=DigitalSignCore.getInstance(algorithm, ksmanager);
+					String signValue=core.signFile(workingFile);
+					textFieldSignValue.setText(signValue);
+					JOptionPane.showMessageDialog(this,"签名完成","完成",JOptionPane.INFORMATION_MESSAGE);
+				}
+				else if(e.getActionCommand().equals("开始验证")) {
+					DigitalSignCore core=DigitalSignCore.getInstance(algorithm, ksmanager);
+					boolean isSigned=core.verifyFile(workingFile,textFieldSignValue.getText());
+					if(isSigned==true) {
+						JOptionPane.showMessageDialog(this,"签名验证通过","完成",JOptionPane.INFORMATION_MESSAGE);
+					}
+					else {
+						throw new Exception("签名验证失败");
+					}
+				}
+			} catch (Exception exc) {
+				exc.printStackTrace();
+				JOptionPane.showMessageDialog(this,exc.getMessage(),"错误",JOptionPane.ERROR_MESSAGE);
+			}
 		}
+		//else if(e.getSource()==)
 		else {
 			System.out.println(e.getActionCommand());
 		}
@@ -567,14 +593,18 @@ public class ISAssistant extends JFrame implements ActionListener,ParentFrameInt
 	public void didVerifyPasswordDialogOkButtonClicked(Object sender, char[] password) {
 		try {
 			ksmanager=KeyStoreManager.getInstance();
-			System.out.println(password);
+			ksmanager.openKeyStoreFromFile(keystoreFile, password);
 		} catch (Exception e) {
 			e.printStackTrace();
 			JOptionPane.showMessageDialog(this,e.getMessage(),"错误",JOptionPane.ERROR_MESSAGE);
 		}
 	}
-
 	public void didSetPasswordDialogOkButtonClicked(Object sender, char[] password) {
-		System.out.println(password);
+		try {
+			ksmanager=KeyStoreManager.getInstance();
+			ksmanager.createKeyStore(keystoreFile, password);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 }

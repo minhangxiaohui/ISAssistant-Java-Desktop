@@ -26,14 +26,12 @@ public class SetPasswordDialog extends JDialog {
 	private JPasswordField passwordFieldSet;
 	private JPasswordField passwordFieldConfirm;
 
-
-	/**
-	 * Create the dialog.
-	 */
 	public SetPasswordDialog() {
 		setTitle("设置密码");
 		setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 		setBounds(100, 100, 300, 200);
+		setLocationRelativeTo(null);
+		
 		getContentPane().setLayout(new BorderLayout());
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		getContentPane().add(contentPanel, BorderLayout.CENTER);

@@ -5,9 +5,7 @@ import java.io.FileInputStream;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
-
 import javax.xml.bind.annotation.adapters.HexBinaryAdapter;
-
 import cn.xiaolulwr.isassistant.common.KeyStoreManager;
 
 public class DigitalSignCore {
@@ -28,7 +26,7 @@ public class DigitalSignCore {
 	
 	public String signFile(File signFile) throws Exception{
 		openFile(signFile);
-		PrivateKey kpr=getPrivateKey();
+		PrivateKey kpr=manager.generateKeyPair("cn.xiaolulwr.ISAssistant", algorithm);
 		Signature signature=Signature.getInstance(algorithm);
 		signature.initSign(kpr);
 		byte[] buffer=new byte[1024];
@@ -47,15 +45,16 @@ public class DigitalSignCore {
 		if(in.read(buffer)!=-1) {
 			signature.update(buffer);
 		}
-		return signature.verify(new HexBinaryAdapter().unmarshal(signValue));
+		try {
+			return signature.verify(new HexBinaryAdapter().unmarshal(signValue));
+		} catch (Exception e) {
+			throw new Exception("签名验证失败");
+		}
 	}
 	private void openFile(File file) throws Exception {
 		in=new FileInputStream(file);
 	}
 	private PublicKey getPublicKey() throws Exception{
 		return manager.getPublicKeyFromCertificate("cn.xiaolulwr.ISAssistant");
-	}
-	private PrivateKey getPrivateKey() throws Exception {
-		return manager.getPrivateKey("cn.xiaolulwr.ISAssistant");
 	}
 }

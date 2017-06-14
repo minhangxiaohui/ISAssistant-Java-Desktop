@@ -2,14 +2,12 @@ package cn.xiaolulwr.isassistant.ui;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
-
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.JLabel;
 import javax.swing.JPasswordField;
-
 import cn.xiaolulwr.isassistant.common.ParentFrameInterface;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
@@ -22,14 +20,12 @@ public class VerifyPasswordDialog extends JDialog {
 	private final JPanel contentPanel = new JPanel();
 	private JPasswordField passwordFieldVerify;
 
-
-	/**
-	 * Create the dialog.
-	 */
 	public VerifyPasswordDialog() {
 		setTitle("验证密码");
 		setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 		setBounds(100, 100, 300, 150);
+		setLocationRelativeTo(null);
+		
 		getContentPane().setLayout(new BorderLayout());
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		getContentPane().add(contentPanel, BorderLayout.CENTER);
