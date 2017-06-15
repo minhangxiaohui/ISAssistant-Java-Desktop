@@ -30,8 +30,9 @@ public class DigitalSignCore {
 		Signature signature=Signature.getInstance(algorithm);
 		signature.initSign(kpr);
 		byte[] buffer=new byte[1024];
-		while(in.read(buffer)!=-1) {
-			signature.update(buffer);
+		int n;
+		while((n=in.read(buffer))!=-1) {
+			signature.update(buffer,0,n);
 		}
 		byte[] signValue=signature.sign();
 		return new HexBinaryAdapter().marshal(signValue);
@@ -42,8 +43,9 @@ public class DigitalSignCore {
 		Signature signature=Signature.getInstance(algorithm);
 		signature.initVerify(kpub);
 		byte[] buffer=new byte[1024];
-		while(in.read(buffer)!=-1) {
-			signature.update(buffer);
+		int n;
+		while((n=in.read(buffer))!=-1) {
+			signature.update(buffer,0,n);
 		}
 		try {
 			return signature.verify(new HexBinaryAdapter().unmarshal(signValue));
