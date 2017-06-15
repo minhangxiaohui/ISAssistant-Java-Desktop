@@ -26,9 +26,7 @@ import javax.swing.JOptionPane;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.security.Security;
-import java.util.Arrays;
 import java.awt.event.ActionEvent;
-import javax.swing.JPasswordField;
 import javax.swing.JSlider;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -39,15 +37,11 @@ import cn.xiaolulwr.isassistant.common.HmacAlgorithm;
 public class ISAssistant extends JFrame implements ActionListener {
 
 	private static final long serialVersionUID = 1L;
-	private File workingFile,keystoreFile;
+	private File workingFile,keystoreFile,outputFile;
 	private KeyStoreManager ksmanager;
 	private JPanel contentPane;
-	private JTextField textFieldEncryptFile;
-	private JPasswordField passwordFieldSet;
-	private JPasswordField passwordFieldConfirm;
+	private JTextField textFieldCryptoFile;
 	private JTextField textFieldSignFile;
-	private JTextField textFieldDecryptFile;
-	private JPasswordField passwordFieldCheck;
 	private JTextField textFieldSignValue;
 	private JTextField textFieldHashMessage;
 	private JTextField textFieldMacMessage;
@@ -55,11 +49,10 @@ public class ISAssistant extends JFrame implements ActionListener {
 	private JTextField textField256Value;
 	private JTextField textField384Value;
 	private JTextField textField512Value;
-	private JButton btnEncrypt;
+	private JButton btnCrypto;
 	private JButton btnSign;
 	private JButton btnHash;
 	private JButton btnMac;
-	private JButton btnDecrypt;
 	private JSlider sliderEncryptMode;
 	private JCheckBox checkBoxIsVerify;
 	private JComboBox<HashAlgorithm> comboBoxHash;
@@ -72,6 +65,9 @@ public class ISAssistant extends JFrame implements ActionListener {
 	private JTextField textFieldMacValue;
 	private JComboBox<HmacAlgorithm> comboBoxMacMode;
 	private JCheckBox checkBoxIsVerifyMac;
+	private JTextField textFieldSaveFile;
+	private JButton btnCryptoSave;
+	private JButton btnCryptoSelect;
 	/**
 	 * Launch the application.
 	 */
@@ -151,124 +147,76 @@ public class ISAssistant extends JFrame implements ActionListener {
 		
 		Color bgColor=new Color(229, 229, 229);
 		
-		JPanel panelEncrypt = new JPanel();
-		panelEncrypt.setBackground(bgColor);
-		tabbedPaneMain.addTab("文件加密", null, panelEncrypt, null);
+		JPanel panelCrypto = new JPanel();
+		panelCrypto.setBackground(bgColor);
+		tabbedPaneMain.addTab("文件加密", null, panelCrypto, null);
 		tabbedPaneMain.setEnabledAt(0, true);
-		panelEncrypt.setLayout(null);
+		panelCrypto.setLayout(null);
 		
-		textFieldEncryptFile = new JTextField();
-		textFieldEncryptFile.setEditable(false);
-		textFieldEncryptFile.setBounds(92, 22, 281, 26);
-		panelEncrypt.add(textFieldEncryptFile);
-		textFieldEncryptFile.setColumns(10);
+		textFieldCryptoFile = new JTextField();
+		textFieldCryptoFile.setEditable(false);
+		textFieldCryptoFile.setBounds(92, 22, 281, 26);
+		panelCrypto.add(textFieldCryptoFile);
+		textFieldCryptoFile.setColumns(10);
 		
 		JLabel label = new JLabel("选择文件");
 		label.setBounds(34, 27, 61, 16);
-		panelEncrypt.add(label);
+		panelCrypto.add(label);
 		
-		JButton btnEncryptSelect = new JButton("浏览");
-		btnEncryptSelect.addActionListener(this);
-		btnEncryptSelect.setBounds(374, 22, 75, 29);
-		panelEncrypt.add(btnEncryptSelect);
+		btnCryptoSelect = new JButton("浏览");
+		btnCryptoSelect.addActionListener(this);
+		btnCryptoSelect.setBounds(374, 22, 75, 29);
+		panelCrypto.add(btnCryptoSelect);
 		
-		btnEncrypt = new JButton("开始加密");
-		btnEncrypt.addActionListener(this);
-		btnEncrypt.setBounds(102, 272, 117, 29);
-		panelEncrypt.add(btnEncrypt);
-		
-		passwordFieldSet = new JPasswordField();
-		passwordFieldSet.setBounds(92, 120, 281, 26);
-		panelEncrypt.add(passwordFieldSet);
-		
-		JLabel label_1 = new JLabel("输入密码");
-		label_1.setBounds(34, 125, 61, 16);
-		panelEncrypt.add(label_1);
-		
-		passwordFieldConfirm = new JPasswordField();
-		passwordFieldConfirm.setBounds(92, 166, 281, 26);
-		panelEncrypt.add(passwordFieldConfirm);
-		
-		JLabel label_2 = new JLabel("确认密码");
-		label_2.setBounds(34, 171, 61, 16);
-		panelEncrypt.add(label_2);
+		btnCrypto = new JButton("开始加密");
+		btnCrypto.addActionListener(this);
+		btnCrypto.setBounds(102, 272, 117, 29);
+		panelCrypto.add(btnCrypto);
 		
 		sliderEncryptMode = new JSlider();
 		sliderEncryptMode.setSnapToTicks(true);
 		sliderEncryptMode.setPaintLabels(true);
 		sliderEncryptMode.setValue(1);
 		sliderEncryptMode.setMaximum(2);
-		sliderEncryptMode.setBounds(133, 60, 190, 29);
-		panelEncrypt.add(sliderEncryptMode);
+		sliderEncryptMode.setBounds(133, 84, 190, 29);
+		panelCrypto.add(sliderEncryptMode);
 		
 		JLabel lblNewLabel = new JLabel("加密强度");
-		lblNewLabel.setBounds(78, 68, 61, 16);
-		panelEncrypt.add(lblNewLabel);
-		
-		JLabel label_3 = new JLabel("密码长度必须是6-16位");
-		label_3.setBounds(166, 204, 136, 16);
-		panelEncrypt.add(label_3);
+		lblNewLabel.setBounds(78, 92, 61, 16);
+		panelCrypto.add(lblNewLabel);
 		
 		JLabel lblaes = new JLabel("一般");
 		lblaes.setToolTipText("使用AES-128");
-		lblaes.setBounds(143, 92, 34, 16);
-		panelEncrypt.add(lblaes);
+		lblaes.setBounds(143, 116, 34, 16);
+		panelCrypto.add(lblaes);
 		
 		JLabel label_4 = new JLabel("强");
 		label_4.setToolTipText("使用AES");
-		label_4.setBounds(222, 92, 13, 16);
-		panelEncrypt.add(label_4);
+		label_4.setBounds(222, 116, 13, 16);
+		panelCrypto.add(label_4);
 		
 		JLabel label_5 = new JLabel("很强");
-		label_5.setBounds(289, 92, 34, 16);
-		panelEncrypt.add(label_5);
+		label_5.setBounds(289, 116, 34, 16);
+		panelCrypto.add(label_5);
 		
 		JButton btnEncryptReset = new JButton("重置");
 		btnEncryptReset.addActionListener(this);
 		btnEncryptReset.setBounds(241, 272, 117, 29);
-		panelEncrypt.add(btnEncryptReset);
+		panelCrypto.add(btnEncryptReset);
 		
-		JPanel panelDecrypt = new JPanel();
-		panelDecrypt.setBackground(bgColor);
-		tabbedPaneMain.addTab("文件解密", null, panelDecrypt, null);
-		panelDecrypt.setLayout(null);
+		textFieldSaveFile = new JTextField();
+		textFieldSaveFile.setEditable(false);
+		textFieldSaveFile.setColumns(10);
+		textFieldSaveFile.setBounds(92, 170, 281, 26);
+		panelCrypto.add(textFieldSaveFile);
 		
-		textFieldDecryptFile = new JTextField();
-		textFieldDecryptFile.setEditable(false);
-		textFieldDecryptFile.setColumns(10);
-		textFieldDecryptFile.setBounds(92, 22, 281, 26);
-		panelDecrypt.add(textFieldDecryptFile);
+		btnCryptoSave = new JButton("位置");
+		btnCryptoSave.setBounds(374, 170, 75, 29);
+		panelCrypto.add(btnCryptoSave);
 		
-		passwordFieldCheck = new JPasswordField();
-		passwordFieldCheck.setBounds(92, 120, 281, 26);
-		panelDecrypt.add(passwordFieldCheck);
-		
-		JLabel label_7 = new JLabel("选择文件");
-		label_7.setBounds(34, 27, 61, 16);
-		panelDecrypt.add(label_7);
-		
-		JLabel label_8 = new JLabel("输入密码");
-		label_8.setBounds(34, 125, 61, 16);
-		panelDecrypt.add(label_8);
-		
-		btnDecrypt = new JButton("开始解密");
-		btnDecrypt.addActionListener(this);
-		btnDecrypt.setBounds(102, 272, 117, 29);
-		panelDecrypt.add(btnDecrypt);
-		
-		JLabel label_9 = new JLabel("密码长度必须是6-16位");
-		label_9.setBounds(166, 204, 136, 16);
-		panelDecrypt.add(label_9);
-		
-		JButton btnDecryptSelect = new JButton("浏览");
-		btnDecryptSelect.addActionListener(this);
-		btnDecryptSelect.setBounds(374, 22, 75, 29);
-		panelDecrypt.add(btnDecryptSelect);
-		
-		JButton btnDecryptReset = new JButton("重置");
-		btnDecryptReset.addActionListener(this);
-		btnDecryptReset.setBounds(241, 272, 117, 29);
-		panelDecrypt.add(btnDecryptReset);
+		JLabel label_1 = new JLabel("保存位置");
+		label_1.setBounds(34, 175, 61, 16);
+		panelCrypto.add(label_1);
 		
 		JPanel panelSign = new JPanel();
 		panelSign.setBackground(bgColor);
@@ -480,11 +428,11 @@ public class ISAssistant extends JFrame implements ActionListener {
 		else if(e.getActionCommand().equals("关闭密钥库")) {
 			this.closeKeyStore();
 		}
-		else if(e.getSource()==btnEncrypt) {	
-			this.encryptFile();
+		else if(e.getSource()==btnCrypto) {	
+			this.cryptoFile();
 		}
-		else if(e.getSource()==btnDecrypt) {
-			this.decryptFile();
+		else if(e.getSource()==btnCryptoSave) {
+			this.saveFile();
 		}
 		else if(e.getSource()==checkBoxIsVerify) {
 			this.verifyModeChanged();
@@ -514,8 +462,62 @@ public class ISAssistant extends JFrame implements ActionListener {
 		if(fileChooser.showOpenDialog(this)==JFileChooser.APPROVE_OPTION) {
 			workingFile=fileChooser.getSelectedFile();
 			this.setFilePath(workingFile.getAbsolutePath());
-			textFieldHashMessage.setEnabled(false);
-			textFieldMacMessage.setEnabled(false);
+			if(workingFile.getName().endsWith(".xiaolucrypto")) {
+				btnCrypto.setText("开始解密");
+			}
+			else {
+				btnCrypto.setText("开始加密");
+			}
+			textFieldHashMessage.setEditable(false);
+			textFieldMacMessage.setEditable(false);
+		}
+	}
+	public void saveFile() {
+		JFileChooser fileChooser=new JFileChooser();
+		FileFilter filter=new FileFilter() {
+			@Override
+			public boolean accept(File pathname) {
+				if(pathname.isDirectory()) {
+					return true;
+				}
+				else {
+					String fileName=pathname.getName();
+					if(btnCrypto.getText().equals("开始加密")) {
+						if(fileName.endsWith(".xiaolucrypto")) {
+							return true;
+						}
+						else {
+							return false;
+						}
+					}
+					else if(btnCrypto.getText().equals("开始解密")) {
+						return true;
+					}
+					else {
+						return false;
+					}
+				}
+			}
+			@Override
+			public String getDescription() {
+				if(btnCrypto.getText().equals("开始加密")) {
+					return new String("加密文件(*.xiaolucrypto)");
+				}
+				else if(btnCrypto.getText().equals("开始解密")) {
+					return null;
+				}
+				else {
+					return null;
+				}
+				
+			}
+		};
+		fileChooser.setFileFilter(filter);
+		if(fileChooser.showSaveDialog(this)==JFileChooser.APPROVE_OPTION) {
+			outputFile=fileChooser.getSelectedFile();
+			if(!outputFile.getName().endsWith(".xiaolucrypto") && btnCrypto.getText().equals("开始加密")) {
+				outputFile=new File(outputFile.getAbsolutePath()+".xiaolucrypto");
+			}
 		}
 	}
 	public void createKeyStore() {
@@ -621,15 +623,11 @@ public class ISAssistant extends JFrame implements ActionListener {
 		textField256Value.setText("");
 		textField384Value.setText("");
 		textField512Value.setText("");
-		passwordFieldCheck.setText("");
-		passwordFieldConfirm.setText("");
-		passwordFieldSet.setText("");
 		textFieldSignValue.setText("");
 		textFieldMacMessage.setText("");
 	}
 	public void setFilePath(String path) {
-		textFieldEncryptFile.setText(path);
-		textFieldDecryptFile.setText(path);
+		textFieldCryptoFile.setText(path);
 		textFieldSignFile.setText(path);
 		textFieldHashMessage.setText(path);
 		textFieldMacMessage.setText(path);
@@ -646,89 +644,59 @@ public class ISAssistant extends JFrame implements ActionListener {
 		ksmanager=null;
 		JOptionPane.showMessageDialog(this,"密钥库已关闭","提示",JOptionPane.INFORMATION_MESSAGE);
 	}
-	public void encryptFile() {
+	public void cryptoFile() {
 		if(workingFile==null) {
 			JOptionPane.showMessageDialog(this,"请选择文件","错误",JOptionPane.ERROR_MESSAGE);
 			return;
 		}
-		JFileChooser fileChooser=new JFileChooser();
-		FileFilter filter=new FileFilter() {
-			@Override
-			public boolean accept(File pathname) {
-				if(pathname.isDirectory()) {
-					return true;
+		if(outputFile==null) {
+			JOptionPane.showMessageDialog(this,"请选择保存位置","错误",JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+		if(btnCrypto.getText().equals("开始加密")) {
+			SetPasswordDialog dialog=new SetPasswordDialog();
+			dialog.addListener(new PasswordDialogListener() {
+				public void didVerifyPasswordDialogOkButtonClicked(Object sender, char[] password) {
+					return;
 				}
-				else {
-					String fileName=pathname.getName();
-					if(fileName.endsWith(".xiaolucrypto")) {
-						return true;
-					}
-					else {
-						return false;
+				public void didSetPasswordDialogOkButtonClicked(Object sender, char[] password) {
+					int keyLength=(sliderEncryptMode.getValue()/2+1)*16;
+					CryptoCore core=CryptoCore.getInstance();
+					try {
+						core.encryptFile(workingFile, password, keyLength, outputFile);
+						core.clean();
+						JOptionPane.showMessageDialog(null,"加密完成","提示",JOptionPane.INFORMATION_MESSAGE);
+					} 
+					catch (Exception e) {
+						e.printStackTrace();
+						JOptionPane.showMessageDialog(null,e.getMessage(),"错误",JOptionPane.ERROR_MESSAGE);
 					}
 				}
-			}
-			@Override
-			public String getDescription() {
-				return new String("加密文件(*.xiaolucrypto)");
-			}
-		};
-		fileChooser.setFileFilter(filter);
-		File output;
-		if(fileChooser.showSaveDialog(this)==JFileChooser.APPROVE_OPTION) {
-			output=fileChooser.getSelectedFile();
-			if(!output.getName().endsWith(".xiaolucrypto")) {
-				output=new File(output.getAbsolutePath()+".xiaolucrypto");
-			}
+			});
+			dialog.setAlwaysOnTop(true);
+			dialog.setVisible(true);
 		}
-		else {
-			return;
-		}
-		char[] password=passwordFieldSet.getPassword();
-		char[] passwordConfirm=passwordFieldConfirm.getPassword();
-		if(password.length<6 || password.length>16) {
-			JOptionPane.showMessageDialog(this,"密码长度必须介于6-16位之间","错误",JOptionPane.ERROR_MESSAGE);
-			return;
-		}
-		if(!Arrays.equals(password, passwordConfirm)) {
-			JOptionPane.showMessageDialog(this,"两次密码输入不一致","错误",JOptionPane.ERROR_MESSAGE);
-			return;
-		}
-		int keyLength=(sliderEncryptMode.getValue()/2+1)*16;
-		CryptoCore core=CryptoCore.getInstance();
-		try {
-			core.encryptFile(workingFile, passwordConfirm, keyLength, output);
-			core.clean();
-			JOptionPane.showMessageDialog(this,"加密完成","提示",JOptionPane.INFORMATION_MESSAGE);
-		} 
-		catch (Exception e) {
-			e.printStackTrace();
-			JOptionPane.showMessageDialog(this,e.getMessage(),"错误",JOptionPane.ERROR_MESSAGE);
-		}
-	}
-	public void decryptFile() {
-		if(workingFile==null) {
-			JOptionPane.showMessageDialog(this,"请选择文件","错误",JOptionPane.ERROR_MESSAGE);
-			return;
-		}
-		JFileChooser fileChooser=new JFileChooser();
-		File output;
-		if(fileChooser.showSaveDialog(this)==JFileChooser.APPROVE_OPTION) {
-			output=fileChooser.getSelectedFile();
-		}
-		else {
-			return;
-		}
-		char[] password=passwordFieldCheck.getPassword();
-		CryptoCore core=CryptoCore.getInstance();
-		try {
-			core.decryptFile(workingFile,password,output);
-			core.clean();
-			JOptionPane.showMessageDialog(this,"解密完成","提示",JOptionPane.INFORMATION_MESSAGE);
-		} 
-		catch (Exception e) {
-			e.printStackTrace();
-			JOptionPane.showMessageDialog(this,e.getMessage(),"错误",JOptionPane.ERROR_MESSAGE);
+		else if(btnCrypto.getText().equals("开始解密")) {
+			VerifyPasswordDialog dialog=new VerifyPasswordDialog();
+			dialog.addListener(new PasswordDialogListener() {
+				public void didVerifyPasswordDialogOkButtonClicked(Object sender, char[] password) {
+					CryptoCore core=CryptoCore.getInstance();
+					try {
+						core.decryptFile(workingFile, password, outputFile);
+						core.clean();
+						JOptionPane.showMessageDialog(null,"解密完成","提示",JOptionPane.INFORMATION_MESSAGE);
+					} 
+					catch (Exception e) {
+						e.printStackTrace();
+						JOptionPane.showMessageDialog(null,e.getMessage(),"错误",JOptionPane.ERROR_MESSAGE);
+					}
+				}
+				public void didSetPasswordDialogOkButtonClicked(Object sender, char[] password) {
+					return;
+				}
+			});
+			dialog.setAlwaysOnTop(true);
+			dialog.setVisible(true);
 		}
 	}
 	public void verifyModeChanged() {
@@ -904,5 +872,4 @@ public class ISAssistant extends JFrame implements ActionListener {
 			dialog.setVisible(true);
 		}
 	}
-	
 }
