@@ -8,7 +8,7 @@ import javax.swing.JDialog;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
-import cn.xiaolulwr.isassistant.common.PasswordDialogListener;
+import cn.xiaolulwr.isassistant.common.SetPasswordDialogListener;
 
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -20,7 +20,7 @@ import java.awt.event.ActionEvent;
 public class SetPasswordDialog extends JDialog {
 
 	private static final long serialVersionUID = 1L;
-	private PasswordDialogListener listener;
+	private SetPasswordDialogListener listener;
 	
 	private final JPanel contentPanel = new JPanel();
 	private JPasswordField passwordFieldSet;
@@ -97,7 +97,7 @@ public class SetPasswordDialog extends JDialog {
 		}
 	}
 
-	public void addListener(PasswordDialogListener listener) {
+	public void addListener(SetPasswordDialogListener listener) {
 		this.listener = listener;
 	}
 }

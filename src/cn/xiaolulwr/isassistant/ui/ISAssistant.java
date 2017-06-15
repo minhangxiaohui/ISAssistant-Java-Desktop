@@ -2,19 +2,14 @@ package cn.xiaolulwr.isassistant.ui;
 
 import java.awt.Color;
 import java.awt.EventQueue;
+import java.awt.event.ActionListener;
+import java.io.File;
+import java.security.Security;
+import java.awt.event.ActionEvent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.filechooser.FileFilter;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import cn.xiaolulwr.isassistant.common.DigitalSignatureAlgorithm;
-import cn.xiaolulwr.isassistant.common.HashAlgorithm;
-import cn.xiaolulwr.isassistant.common.KeyStoreManager;
-import cn.xiaolulwr.isassistant.common.PasswordDialogListener;
-import cn.xiaolulwr.isassistant.crypto.CryptoCore;
-import cn.xiaolulwr.isassistant.hash.DigestCore;
-import cn.xiaolulwr.isassistant.mac.MacCore;
-import cn.xiaolulwr.isassistant.sign.DigitalSignCore;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.JLabel;
@@ -23,16 +18,23 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
-import java.awt.event.ActionListener;
-import java.io.File;
-import java.security.Security;
-import java.awt.event.ActionEvent;
 import javax.swing.JSlider;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.DefaultComboBoxModel;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import cn.xiaolulwr.isassistant.common.DigitalSignatureAlgorithm;
+import cn.xiaolulwr.isassistant.common.HashAlgorithm;
+import cn.xiaolulwr.isassistant.common.KeyStoreManager;
+import cn.xiaolulwr.isassistant.common.SetPasswordDialogListener;
+import cn.xiaolulwr.isassistant.common.VerifyPasswordDialogListener;
 import cn.xiaolulwr.isassistant.common.HmacAlgorithm;
+import cn.xiaolulwr.isassistant.crypto.CryptoCore;
+import cn.xiaolulwr.isassistant.hash.DigestCore;
+import cn.xiaolulwr.isassistant.mac.MacCore;
+import cn.xiaolulwr.isassistant.sign.DigitalSignCore;
+
 
 public class ISAssistant extends JFrame implements ActionListener {
 
@@ -211,6 +213,7 @@ public class ISAssistant extends JFrame implements ActionListener {
 		panelCrypto.add(textFieldSaveFile);
 		
 		btnCryptoSave = new JButton("位置");
+		btnCryptoSave.addActionListener(this);
 		btnCryptoSave.setBounds(374, 170, 75, 29);
 		panelCrypto.add(btnCryptoSave);
 		
@@ -464,9 +467,11 @@ public class ISAssistant extends JFrame implements ActionListener {
 			this.setFilePath(workingFile.getAbsolutePath());
 			if(workingFile.getName().endsWith(".xiaolucrypto")) {
 				btnCrypto.setText("开始解密");
+				sliderEncryptMode.setEnabled(false);
 			}
 			else {
 				btnCrypto.setText("开始加密");
+				sliderEncryptMode.setEnabled(true);
 			}
 			textFieldHashMessage.setEditable(false);
 			textFieldMacMessage.setEditable(false);
@@ -518,6 +523,7 @@ public class ISAssistant extends JFrame implements ActionListener {
 			if(!outputFile.getName().endsWith(".xiaolucrypto") && btnCrypto.getText().equals("开始加密")) {
 				outputFile=new File(outputFile.getAbsolutePath()+".xiaolucrypto");
 			}
+			textFieldSaveFile.setText(outputFile.getAbsolutePath());
 		}
 	}
 	public void createKeyStore() {
@@ -550,10 +556,7 @@ public class ISAssistant extends JFrame implements ActionListener {
 				keystoreFile=new File(keystoreFile.getAbsolutePath()+".keystore");
 			}
 			SetPasswordDialog dialog=new SetPasswordDialog();
-			dialog.addListener(new PasswordDialogListener() {
-				public void didVerifyPasswordDialogOkButtonClicked(Object sender, char[] password) {
-					return;
-				}
+			dialog.addListener(new SetPasswordDialogListener() {
 				public void didSetPasswordDialogOkButtonClicked(Object sender, char[] password) {
 					try {
 						ksmanager=KeyStoreManager.getInstance();
@@ -596,7 +599,7 @@ public class ISAssistant extends JFrame implements ActionListener {
 		if(fileChooser.showOpenDialog(this)==JFileChooser.APPROVE_OPTION) {
 			keystoreFile=fileChooser.getSelectedFile();
 			VerifyPasswordDialog dialog=new VerifyPasswordDialog();
-			dialog.addListener(new PasswordDialogListener() {
+			dialog.addListener(new VerifyPasswordDialogListener() {
 				public void didVerifyPasswordDialogOkButtonClicked(Object sender, char[] password) {
 					try {
 						ksmanager=KeyStoreManager.getInstance();
@@ -608,9 +611,6 @@ public class ISAssistant extends JFrame implements ActionListener {
 						JOptionPane.showMessageDialog(null,e.getMessage(),"错误",JOptionPane.ERROR_MESSAGE);
 					}
 				}
-				public void didSetPasswordDialogOkButtonClicked(Object sender, char[] password) {
-					return;
-				}
 			});
 			dialog.setAlwaysOnTop(true);
 			dialog.setVisible(true);
@@ -619,6 +619,7 @@ public class ISAssistant extends JFrame implements ActionListener {
 	public void reset() {
 		workingFile=null;
 		this.setFilePath("");
+		sliderEncryptMode.setEnabled(true);
 		textField224Value.setText("");
 		textField256Value.setText("");
 		textField384Value.setText("");
@@ -655,10 +656,7 @@ public class ISAssistant extends JFrame implements ActionListener {
 		}
 		if(btnCrypto.getText().equals("开始加密")) {
 			SetPasswordDialog dialog=new SetPasswordDialog();
-			dialog.addListener(new PasswordDialogListener() {
-				public void didVerifyPasswordDialogOkButtonClicked(Object sender, char[] password) {
-					return;
-				}
+			dialog.addListener(new SetPasswordDialogListener() {
 				public void didSetPasswordDialogOkButtonClicked(Object sender, char[] password) {
 					int keyLength=(sliderEncryptMode.getValue()/2+1)*16;
 					CryptoCore core=CryptoCore.getInstance();
@@ -678,7 +676,7 @@ public class ISAssistant extends JFrame implements ActionListener {
 		}
 		else if(btnCrypto.getText().equals("开始解密")) {
 			VerifyPasswordDialog dialog=new VerifyPasswordDialog();
-			dialog.addListener(new PasswordDialogListener() {
+			dialog.addListener(new VerifyPasswordDialogListener() {
 				public void didVerifyPasswordDialogOkButtonClicked(Object sender, char[] password) {
 					CryptoCore core=CryptoCore.getInstance();
 					try {
@@ -690,9 +688,6 @@ public class ISAssistant extends JFrame implements ActionListener {
 						e.printStackTrace();
 						JOptionPane.showMessageDialog(null,e.getMessage(),"错误",JOptionPane.ERROR_MESSAGE);
 					}
-				}
-				public void didSetPasswordDialogOkButtonClicked(Object sender, char[] password) {
-					return;
 				}
 			});
 			dialog.setAlwaysOnTop(true);
@@ -813,10 +808,7 @@ public class ISAssistant extends JFrame implements ActionListener {
 	public void getMac() {
 		if(btnMac.getText().equals("计算MAC")) {
 			SetPasswordDialog dialog=new SetPasswordDialog();
-			dialog.addListener(new PasswordDialogListener() {
-				public void didVerifyPasswordDialogOkButtonClicked(Object sender, char[] password) {
-					return;
-				}
+			dialog.addListener(new SetPasswordDialogListener() {
 				public void didSetPasswordDialogOkButtonClicked(Object sender, char[] password) {
 					String algorithm=comboBoxMacMode.getSelectedItem().toString();
 					MacCore core=MacCore.getInstance(algorithm);
@@ -840,7 +832,7 @@ public class ISAssistant extends JFrame implements ActionListener {
 		}
 		else if(btnMac.getText().equals("验证MAC")) {
 			VerifyPasswordDialog dialog=new VerifyPasswordDialog();
-			dialog.addListener(new PasswordDialogListener() {
+			dialog.addListener(new VerifyPasswordDialogListener() {
 				public void didVerifyPasswordDialogOkButtonClicked(Object sender, char[] password) {
 					String algorithm=comboBoxMacMode.getSelectedItem().toString();
 					MacCore core=MacCore.getInstance(algorithm);
@@ -863,9 +855,6 @@ public class ISAssistant extends JFrame implements ActionListener {
 						e.printStackTrace();
 						JOptionPane.showMessageDialog(null,e.getMessage(),"错误",JOptionPane.ERROR_MESSAGE);
 					}
-				}
-				public void didSetPasswordDialogOkButtonClicked(Object sender, char[] password) {
-					return;
 				}
 			});
 			dialog.setAlwaysOnTop(true);

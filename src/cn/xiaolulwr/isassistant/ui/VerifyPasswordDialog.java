@@ -8,14 +8,15 @@ import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.JLabel;
 import javax.swing.JPasswordField;
-import cn.xiaolulwr.isassistant.common.PasswordDialogListener;
+import cn.xiaolulwr.isassistant.common.VerifyPasswordDialogListener;
+
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 
 public class VerifyPasswordDialog extends JDialog {
 
 	private static final long serialVersionUID = 1L;
-	private PasswordDialogListener listener;
+	private VerifyPasswordDialogListener listener;
 
 	private final JPanel contentPanel = new JPanel();
 	private JPasswordField passwordFieldVerify;
@@ -68,7 +69,7 @@ public class VerifyPasswordDialog extends JDialog {
 			}
 		}
 	}
-	public void addListener(PasswordDialogListener listener) {
+	public void addListener(VerifyPasswordDialogListener listener) {
 		this.listener = listener;
 	}
 }
