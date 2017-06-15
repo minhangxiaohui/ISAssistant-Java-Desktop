@@ -5,13 +5,15 @@ import java.awt.EventQueue;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
+import javax.swing.filechooser.FileFilter;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import cn.xiaolulwr.isassistant.common.DigitalSignatureAlgorithm;
 import cn.xiaolulwr.isassistant.common.HashAlgorithm;
 import cn.xiaolulwr.isassistant.common.KeyStoreManager;
-import cn.xiaolulwr.isassistant.common.ParentFrameInterface;
+import cn.xiaolulwr.isassistant.common.PasswordDialogListener;
 import cn.xiaolulwr.isassistant.crypto.CryptoCore;
 import cn.xiaolulwr.isassistant.hash.DigestCore;
+import cn.xiaolulwr.isassistant.mac.MacCore;
 import cn.xiaolulwr.isassistant.sign.DigitalSignCore;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
@@ -32,8 +34,9 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.DefaultComboBoxModel;
+import cn.xiaolulwr.isassistant.common.HmacAlgorithm;
 
-public class ISAssistant extends JFrame implements ActionListener,ParentFrameInterface {
+public class ISAssistant extends JFrame implements ActionListener {
 
 	private static final long serialVersionUID = 1L;
 	private File workingFile,keystoreFile;
@@ -66,6 +69,9 @@ public class ISAssistant extends JFrame implements ActionListener,ParentFrameInt
 	private JLabel labelHash256;
 	private JLabel labelHash384;
 	private JLabel labelHash512;
+	private JTextField textFieldMacValue;
+	private JComboBox<HmacAlgorithm> comboBoxMacMode;
+	private JCheckBox checkBoxIsVerifyMac;
 	/**
 	 * Launch the application.
 	 */
@@ -429,6 +435,30 @@ public class ISAssistant extends JFrame implements ActionListener,ParentFrameInt
 		btnMacReset.addActionListener(this);
 		btnMacReset.setBounds(241, 272, 117, 29);
 		panelMac.add(btnMacReset);
+		
+		textFieldMacValue = new JTextField();
+		textFieldMacValue.setEditable(false);
+		textFieldMacValue.setBounds(92, 135, 281, 26);
+		panelMac.add(textFieldMacValue);
+		textFieldMacValue.setColumns(10);
+		
+		comboBoxMacMode = new JComboBox<HmacAlgorithm>();
+		comboBoxMacMode.setModel(new DefaultComboBoxModel<HmacAlgorithm>(HmacAlgorithm.values()));
+		comboBoxMacMode.setBounds(163, 78, 142, 27);
+		panelMac.add(comboBoxMacMode);
+		
+		JLabel lblMac = new JLabel("MAC");
+		lblMac.setBounds(44, 140, 48, 16);
+		panelMac.add(lblMac);
+		
+		checkBoxIsVerifyMac = new JCheckBox("验证MAC");
+		checkBoxIsVerifyMac.addActionListener(this);
+		checkBoxIsVerifyMac.setBounds(374, 136, 87, 23);
+		panelMac.add(checkBoxIsVerifyMac);
+		
+		JLabel lblMac_1 = new JLabel("MAC算法");
+		lblMac_1.setBounds(102, 82, 61, 16);
+		panelMac.add(lblMac_1);
 	}
 
 	public void actionPerformed(ActionEvent e) {
@@ -468,6 +498,12 @@ public class ISAssistant extends JFrame implements ActionListener,ParentFrameInt
 		else if(e.getSource()==btnHash) {
 			this.getHashValue();
 		}
+		else if(e.getSource()==checkBoxIsVerifyMac) {
+			this.verifyMacModeChanged();
+		}
+		else if(e.getSource()==btnMac) {
+			this.getMac();
+		}
 		else {
 			System.out.println(e.getActionCommand());
 		}
@@ -478,24 +514,102 @@ public class ISAssistant extends JFrame implements ActionListener,ParentFrameInt
 		if(fileChooser.showOpenDialog(this)==JFileChooser.APPROVE_OPTION) {
 			workingFile=fileChooser.getSelectedFile();
 			this.setFilePath(workingFile.getAbsolutePath());
+			textFieldHashMessage.setEnabled(false);
+			textFieldMacMessage.setEnabled(false);
 		}
 	}
 	public void createKeyStore() {
 		JFileChooser fileChooser=new JFileChooser();
+		FileFilter filter=new FileFilter() {
+			@Override
+			public boolean accept(File pathname) {
+				if(pathname.isDirectory()) {
+					return true;
+				}
+				else {
+					String fileName=pathname.getName();
+					if(fileName.endsWith(".keystore")) {
+						return true;
+					}
+					else {
+						return false;
+					}
+				}
+			}
+			@Override
+			public String getDescription() {
+				return new String("密钥库文件(*.keystore)");
+			}
+		};
+		fileChooser.setFileFilter(filter);
 		if(fileChooser.showSaveDialog(this)==JFileChooser.APPROVE_OPTION) {
 			keystoreFile=fileChooser.getSelectedFile();
+			if(!keystoreFile.getName().endsWith(".keystore")) {
+				keystoreFile=new File(keystoreFile.getAbsolutePath()+".keystore");
+			}
 			SetPasswordDialog dialog=new SetPasswordDialog();
-			dialog.setParent(this);
+			dialog.addListener(new PasswordDialogListener() {
+				public void didVerifyPasswordDialogOkButtonClicked(Object sender, char[] password) {
+					return;
+				}
+				public void didSetPasswordDialogOkButtonClicked(Object sender, char[] password) {
+					try {
+						ksmanager=KeyStoreManager.getInstance();
+						ksmanager.createKeyStore(keystoreFile, password);
+						JOptionPane.showMessageDialog(null,"密钥库已创建","提示",JOptionPane.INFORMATION_MESSAGE);
+					} 
+					catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			});
 			dialog.setAlwaysOnTop(true);
 			dialog.setVisible(true);
 		}
 	}
 	public void openKeyStore() {
 		JFileChooser fileChooser=new JFileChooser();
+		FileFilter filter=new FileFilter() {
+			@Override
+			public boolean accept(File pathname) {
+				if(pathname.isDirectory()) {
+					return true;
+				}
+				else {
+					String fileName=pathname.getName();
+					if(fileName.endsWith(".keystore")) {
+						return true;
+					}
+					else {
+						return false;
+					}
+				}
+			}
+			@Override
+			public String getDescription() {
+				return new String("密钥库文件(*.keystore)");
+			}
+		};
+		fileChooser.setFileFilter(filter);
 		if(fileChooser.showOpenDialog(this)==JFileChooser.APPROVE_OPTION) {
 			keystoreFile=fileChooser.getSelectedFile();
 			VerifyPasswordDialog dialog=new VerifyPasswordDialog();
-			dialog.setParent(this);
+			dialog.addListener(new PasswordDialogListener() {
+				public void didVerifyPasswordDialogOkButtonClicked(Object sender, char[] password) {
+					try {
+						ksmanager=KeyStoreManager.getInstance();
+						ksmanager.openKeyStoreFromFile(keystoreFile, password);
+						JOptionPane.showMessageDialog(null,"文件已加载","提示",JOptionPane.INFORMATION_MESSAGE);
+					}
+					catch (Exception e) {
+						e.printStackTrace();
+						JOptionPane.showMessageDialog(null,e.getMessage(),"错误",JOptionPane.ERROR_MESSAGE);
+					}
+				}
+				public void didSetPasswordDialogOkButtonClicked(Object sender, char[] password) {
+					return;
+				}
+			});
 			dialog.setAlwaysOnTop(true);
 			dialog.setVisible(true);
 		}
@@ -523,6 +637,8 @@ public class ISAssistant extends JFrame implements ActionListener,ParentFrameInt
 	public void closeFile() {
 		workingFile=null;
 		this.setFilePath("");
+		textFieldHashMessage.setEnabled(true);
+		textFieldMacMessage.setEnabled(true);
 		JOptionPane.showMessageDialog(this,"文件已关闭","提示",JOptionPane.INFORMATION_MESSAGE);
 	}
 	public void closeKeyStore() {
@@ -536,9 +652,34 @@ public class ISAssistant extends JFrame implements ActionListener,ParentFrameInt
 			return;
 		}
 		JFileChooser fileChooser=new JFileChooser();
+		FileFilter filter=new FileFilter() {
+			@Override
+			public boolean accept(File pathname) {
+				if(pathname.isDirectory()) {
+					return true;
+				}
+				else {
+					String fileName=pathname.getName();
+					if(fileName.endsWith(".xiaolucrypto")) {
+						return true;
+					}
+					else {
+						return false;
+					}
+				}
+			}
+			@Override
+			public String getDescription() {
+				return new String("加密文件(*.xiaolucrypto)");
+			}
+		};
+		fileChooser.setFileFilter(filter);
 		File output;
 		if(fileChooser.showSaveDialog(this)==JFileChooser.APPROVE_OPTION) {
 			output=fileChooser.getSelectedFile();
+			if(!output.getName().endsWith(".xiaolucrypto")) {
+				output=new File(output.getAbsolutePath()+".xiaolucrypto");
+			}
 		}
 		else {
 			return;
@@ -560,9 +701,9 @@ public class ISAssistant extends JFrame implements ActionListener,ParentFrameInt
 			core.clean();
 			JOptionPane.showMessageDialog(this,"加密完成","提示",JOptionPane.INFORMATION_MESSAGE);
 		} 
-		catch (Exception exc) {
-			exc.printStackTrace();
-			JOptionPane.showMessageDialog(this,exc.getMessage(),"错误",JOptionPane.ERROR_MESSAGE);
+		catch (Exception e) {
+			e.printStackTrace();
+			JOptionPane.showMessageDialog(this,e.getMessage(),"错误",JOptionPane.ERROR_MESSAGE);
 		}
 	}
 	public void decryptFile() {
@@ -585,9 +726,9 @@ public class ISAssistant extends JFrame implements ActionListener,ParentFrameInt
 			core.clean();
 			JOptionPane.showMessageDialog(this,"解密完成","提示",JOptionPane.INFORMATION_MESSAGE);
 		} 
-		catch (Exception exc) {
-			exc.printStackTrace();
-			JOptionPane.showMessageDialog(this,exc.getMessage(),"错误",JOptionPane.ERROR_MESSAGE);
+		catch (Exception e) {
+			e.printStackTrace();
+			JOptionPane.showMessageDialog(this,e.getMessage(),"错误",JOptionPane.ERROR_MESSAGE);
 		}
 	}
 	public void verifyModeChanged() {
@@ -617,21 +758,25 @@ public class ISAssistant extends JFrame implements ActionListener,ParentFrameInt
 				DigitalSignCore core=DigitalSignCore.getInstance(algorithm, ksmanager);
 				String signValue=core.signFile(workingFile);
 				textFieldSignValue.setText(signValue);
-				JOptionPane.showMessageDialog(this,"签名完成","完成",JOptionPane.INFORMATION_MESSAGE);
+				JOptionPane.showMessageDialog(this,"签名完成","提示",JOptionPane.INFORMATION_MESSAGE);
 			}
 			else if(btnSign.getText().equals("开始验证")) {
 				DigitalSignCore core=DigitalSignCore.getInstance(algorithm, ksmanager);
 				boolean isSigned=core.verifyFile(workingFile,textFieldSignValue.getText());
 				if(isSigned==true) {
-					JOptionPane.showMessageDialog(this,"签名验证通过","完成",JOptionPane.INFORMATION_MESSAGE);
+					JOptionPane.showMessageDialog(this,"签名验证通过","提示",JOptionPane.INFORMATION_MESSAGE);
 				}
 				else {
 					throw new Exception("签名验证失败");
 				}
 			}
-		} catch (Exception exc) {
-			exc.printStackTrace();
-			JOptionPane.showMessageDialog(this,exc.getMessage(),"错误",JOptionPane.ERROR_MESSAGE);
+		} catch (Exception e) {
+			e.printStackTrace();
+			JOptionPane.showMessageDialog(this,e.getMessage(),"错误",JOptionPane.ERROR_MESSAGE);
+			if(e.getMessage().equals("密钥库不合法或密码错误")) {
+				this.openKeyStore();
+				this.signFile();
+			}
 		}
 	}
 	public void hashModeChanged() {
@@ -682,30 +827,82 @@ public class ISAssistant extends JFrame implements ActionListener,ParentFrameInt
 					textField512Value.setText(core.getHashValue(workingFile));
 				}
 			}
-		} catch (Exception exc) {
-			exc.printStackTrace();
-			JOptionPane.showMessageDialog(this,exc.getMessage(),"错误",JOptionPane.ERROR_MESSAGE);
-		}
-	}
-	public void didVerifyPasswordDialogOkButtonClicked(Object sender, char[] password) {
-		try {
-			ksmanager=KeyStoreManager.getInstance();
-			ksmanager.openKeyStoreFromFile(keystoreFile, password);
-			JOptionPane.showMessageDialog(this,"文件已加载","提示",JOptionPane.INFORMATION_MESSAGE);
-		} 
-		catch (Exception e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			JOptionPane.showMessageDialog(this,e.getMessage(),"错误",JOptionPane.ERROR_MESSAGE);
 		}
 	}
-	public void didSetPasswordDialogOkButtonClicked(Object sender, char[] password) {
-		try {
-			ksmanager=KeyStoreManager.getInstance();
-			ksmanager.createKeyStore(keystoreFile, password);
-			JOptionPane.showMessageDialog(this,"密钥库已创建","提示",JOptionPane.INFORMATION_MESSAGE);
-		} 
-		catch (Exception e) {
-			e.printStackTrace();
+	public void verifyMacModeChanged() {
+		if(checkBoxIsVerifyMac.isSelected()==true) {
+			btnMac.setText("验证MAC");
+			textFieldMacValue.setEditable(true);
+		}
+		else {
+			btnMac.setText("计算MAC");
+			textFieldMacValue.setEditable(false);
 		}
 	}
+	public void getMac() {
+		if(btnMac.getText().equals("计算MAC")) {
+			SetPasswordDialog dialog=new SetPasswordDialog();
+			dialog.addListener(new PasswordDialogListener() {
+				public void didVerifyPasswordDialogOkButtonClicked(Object sender, char[] password) {
+					return;
+				}
+				public void didSetPasswordDialogOkButtonClicked(Object sender, char[] password) {
+					String algorithm=comboBoxMacMode.getSelectedItem().toString();
+					MacCore core=MacCore.getInstance(algorithm);
+					try {
+						if(workingFile==null) {
+							String value=core.getMac(textFieldMacMessage.getText(), password);
+							textFieldMacValue.setText(value);
+						}
+						else {
+							String value=core.getMac(workingFile, password);
+							textFieldMacValue.setText(value);
+						}
+					} catch (Exception e) {
+						e.printStackTrace();
+						JOptionPane.showMessageDialog(null,e.getMessage(),"错误",JOptionPane.ERROR_MESSAGE);
+					}
+				}
+			});
+			dialog.setAlwaysOnTop(true);
+			dialog.setVisible(true);
+		}
+		else if(btnMac.getText().equals("验证MAC")) {
+			VerifyPasswordDialog dialog=new VerifyPasswordDialog();
+			dialog.addListener(new PasswordDialogListener() {
+				public void didVerifyPasswordDialogOkButtonClicked(Object sender, char[] password) {
+					String algorithm=comboBoxMacMode.getSelectedItem().toString();
+					MacCore core=MacCore.getInstance(algorithm);
+					try {
+						boolean isCheck;
+						if(workingFile==null) {
+							isCheck=core.checkMac(textFieldMacMessage.getText(), password, textFieldMacValue.getText());
+						}
+						else {
+							isCheck=core.checkMac(workingFile, password, textFieldMacValue.getText());
+						}
+						if(isCheck==true) {
+							JOptionPane.showMessageDialog(null,"消息认证通过","提示",JOptionPane.INFORMATION_MESSAGE);
+						}
+						else {
+							throw new Exception("消息认证失败");
+						}
+					} 
+					catch (Exception e) {
+						e.printStackTrace();
+						JOptionPane.showMessageDialog(null,e.getMessage(),"错误",JOptionPane.ERROR_MESSAGE);
+					}
+				}
+				public void didSetPasswordDialogOkButtonClicked(Object sender, char[] password) {
+					return;
+				}
+			});
+			dialog.setAlwaysOnTop(true);
+			dialog.setVisible(true);
+		}
+	}
+	
 }

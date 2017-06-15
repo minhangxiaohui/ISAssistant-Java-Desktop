@@ -38,7 +38,7 @@ public class DigitalSignCore {
 	}
 	public boolean verifyFile(File verifyFile,String signValue) throws Exception{
 		openFile(verifyFile);
-		PublicKey kpub=getPublicKey();
+		PublicKey kpub=manager.getPublicKeyFromCertificate("cn.xiaolulwr.ISAssistant");
 		Signature signature=Signature.getInstance(algorithm);
 		signature.initVerify(kpub);
 		byte[] buffer=new byte[1024];
@@ -53,8 +53,5 @@ public class DigitalSignCore {
 	}
 	private void openFile(File file) throws Exception {
 		in=new FileInputStream(file);
-	}
-	private PublicKey getPublicKey() throws Exception{
-		return manager.getPublicKeyFromCertificate("cn.xiaolulwr.ISAssistant");
 	}
 }

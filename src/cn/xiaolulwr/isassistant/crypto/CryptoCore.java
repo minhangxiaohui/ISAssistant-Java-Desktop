@@ -30,6 +30,7 @@ public class CryptoCore {
 		openFile(encryptFile,outputFile);
 		outputStream.write(encryptFileID.getBytes());
 		SecretKey key=getKeyByPassword(password,keyLengthByByte);
+		outputStream.write(keyLengthByByte);
 		IvParameterSpec iv=getRandomIv();
 		Cipher cipher=Cipher.getInstance("AES/CFB/PKCS5Padding");
 		cipher.init(Cipher.ENCRYPT_MODE,key,iv);
@@ -62,7 +63,6 @@ public class CryptoCore {
 		SecureRandom random=SecureRandom.getInstance("SHA1PRNG");
 		random.setSeed(passwordValue);
 		generator.init(keyLengthByByte*8, random);
-		outputStream.write(keyLengthByByte);
 		return generator.generateKey();
 	}
 	private IvParameterSpec getRandomIv() throws Exception {

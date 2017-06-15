@@ -35,11 +35,12 @@ public class DigestCore {
 		MessageDigest md=MessageDigest.getInstance(algorithm);
 		DigestInputStream din=new DigestInputStream(in, md);
 		byte[] buffer=new byte[1024];
-		while(din.read(buffer)!=-1);
+		while((din.read(buffer))!=-1);
 		byte[] out=md.digest();
 		din.close();
 		return new HexBinaryAdapter().marshal(out);
 	}
+
 	public boolean checkHashValue(File fileToHash,String checksum) throws Exception{
 		String hashValue=this.getHashValue(fileToHash);
 		return hashValue.equals(checksum);
