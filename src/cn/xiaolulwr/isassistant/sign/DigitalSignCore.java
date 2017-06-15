@@ -26,7 +26,7 @@ public class DigitalSignCore {
 	
 	public String signFile(File signFile) throws Exception{
 		openFile(signFile);
-		PrivateKey kpr=manager.generateKeyPair("cn.xiaolulwr.ISAssistant", algorithm);
+		PrivateKey kpr=manager.generateKeyPair(signFile.getName()+algorithm, algorithm);
 		Signature signature=Signature.getInstance(algorithm);
 		signature.initSign(kpr);
 		byte[] buffer=new byte[1024];
@@ -39,7 +39,7 @@ public class DigitalSignCore {
 	}
 	public boolean verifyFile(File verifyFile,String signValue) throws Exception{
 		openFile(verifyFile);
-		PublicKey kpub=manager.getPublicKeyFromCertificate("cn.xiaolulwr.ISAssistant");
+		PublicKey kpub=manager.getPublicKeyFromCertificate(verifyFile.getName()+algorithm);
 		Signature signature=Signature.getInstance(algorithm);
 		signature.initVerify(kpub);
 		byte[] buffer=new byte[1024];
