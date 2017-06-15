@@ -104,6 +104,14 @@ public class MacCore {
 		String currentValue=getMac(fileToCheck, password);
 		return currentValue.equals(value);
 	}
+	/**
+	 * 根据密码生成消息认证的密钥
+	 * @param password
+	 * 密码
+	 * @return
+	 * 构建好的密钥对象
+	 * @throws Exception
+	 */
 	private SecretKey getKeyByPassword(char[] password) throws Exception{
 		KeyGenerator generator=KeyGenerator.getInstance(algorithm);
 		byte[] passwordValue=new String(password).getBytes();
