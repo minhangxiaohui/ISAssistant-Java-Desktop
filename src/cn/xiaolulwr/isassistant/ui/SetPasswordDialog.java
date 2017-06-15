@@ -53,9 +53,9 @@ public class SetPasswordDialog extends JDialog {
 		label.setBounds(32, 90, 36, 16);
 		contentPanel.add(label);
 		
-		JLabel label_1 = new JLabel("密码长度必须是6-16位");
-		label_1.setBounds(82, 123, 136, 16);
-		contentPanel.add(label_1);
+		JLabel lblyiShi = new JLabel("警告：如果密码遗失，您的数据将丢失。");
+		lblyiShi.setBounds(33, 130, 234, 16);
+		contentPanel.add(lblyiShi);
 		{
 			JPanel buttonPane = new JPanel();
 			buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));

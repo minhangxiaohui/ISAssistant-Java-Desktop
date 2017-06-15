@@ -156,6 +156,7 @@ public class ISAssistant extends JFrame implements ActionListener {
 		panelCrypto.setLayout(null);
 		
 		textFieldCryptoFile = new JTextField();
+		textFieldCryptoFile.setToolTipText("从文件系统中选择文件");
 		textFieldCryptoFile.setEditable(false);
 		textFieldCryptoFile.setBounds(92, 22, 281, 26);
 		panelCrypto.add(textFieldCryptoFile);
@@ -166,6 +167,7 @@ public class ISAssistant extends JFrame implements ActionListener {
 		panelCrypto.add(label);
 		
 		btnCryptoSelect = new JButton("浏览");
+		btnCryptoSelect.setToolTipText("从文件系统选择文件");
 		btnCryptoSelect.addActionListener(this);
 		btnCryptoSelect.setBounds(374, 22, 75, 29);
 		panelCrypto.add(btnCryptoSelect);
@@ -184,6 +186,7 @@ public class ISAssistant extends JFrame implements ActionListener {
 		panelCrypto.add(sliderEncryptMode);
 		
 		JLabel lblNewLabel = new JLabel("加密强度");
+		lblNewLabel.setToolTipText("选择加密强度：加密强度越高，文件保密的级别越好。");
 		lblNewLabel.setBounds(78, 92, 61, 16);
 		panelCrypto.add(lblNewLabel);
 		
@@ -193,11 +196,12 @@ public class ISAssistant extends JFrame implements ActionListener {
 		panelCrypto.add(lblaes);
 		
 		JLabel label_4 = new JLabel("强");
-		label_4.setToolTipText("使用AES");
+		label_4.setToolTipText("使用AES-192");
 		label_4.setBounds(222, 116, 13, 16);
 		panelCrypto.add(label_4);
 		
 		JLabel label_5 = new JLabel("很强");
+		label_5.setToolTipText("使用AES-256");
 		label_5.setBounds(289, 116, 34, 16);
 		panelCrypto.add(label_5);
 		
@@ -207,12 +211,14 @@ public class ISAssistant extends JFrame implements ActionListener {
 		panelCrypto.add(btnEncryptReset);
 		
 		textFieldSaveFile = new JTextField();
+		textFieldSaveFile.setToolTipText("保存文件到此路径");
 		textFieldSaveFile.setEditable(false);
 		textFieldSaveFile.setColumns(10);
 		textFieldSaveFile.setBounds(92, 170, 281, 26);
 		panelCrypto.add(textFieldSaveFile);
 		
 		btnCryptoSave = new JButton("位置");
+		btnCryptoSave.setToolTipText("选择保存文件的位置");
 		btnCryptoSave.addActionListener(this);
 		btnCryptoSave.setBounds(374, 170, 75, 29);
 		panelCrypto.add(btnCryptoSave);
@@ -227,6 +233,7 @@ public class ISAssistant extends JFrame implements ActionListener {
 		panelSign.setLayout(null);
 		
 		textFieldSignFile = new JTextField();
+		textFieldSignFile.setToolTipText("从文件系统中选择文件");
 		textFieldSignFile.setEditable(false);
 		textFieldSignFile.setColumns(10);
 		textFieldSignFile.setBounds(92, 22, 281, 26);
@@ -242,11 +249,13 @@ public class ISAssistant extends JFrame implements ActionListener {
 		panelSign.add(btnSignSelect);
 		
 		checkBoxIsVerify = new JCheckBox("验证签名");
+		checkBoxIsVerify.setToolTipText("勾选以开始验证数字签名");
 		checkBoxIsVerify.addActionListener(this);
 		checkBoxIsVerify.setBounds(374, 160, 84, 23);
 		panelSign.add(checkBoxIsVerify);
 		
 		textFieldSignValue = new JTextField();
+		textFieldSignValue.setToolTipText("文件的数字签名值");
 		textFieldSignValue.setEditable(false);
 		textFieldSignValue.setBounds(92, 159, 281, 26);
 		panelSign.add(textFieldSignValue);
@@ -257,11 +266,13 @@ public class ISAssistant extends JFrame implements ActionListener {
 		panelSign.add(label_10);
 		
 		comboBoxHash = new JComboBox<HashAlgorithm>();
+		comboBoxHash.setToolTipText("用于数字签名的消息摘要算法");
 		comboBoxHash.setModel(new DefaultComboBoxModel<HashAlgorithm>(HashAlgorithm.values()));
 		comboBoxHash.setBounds(227, 70, 111, 27);
 		panelSign.add(comboBoxHash);
 		
 		comboBoxDigitalSign = new JComboBox<DigitalSignatureAlgorithm>();
+		comboBoxDigitalSign.setToolTipText("用于数字签名的签名算法");
 		comboBoxDigitalSign.setModel(new DefaultComboBoxModel<DigitalSignatureAlgorithm>(DigitalSignatureAlgorithm.values()));
 		comboBoxDigitalSign.setBounds(227, 116, 111, 27);
 		panelSign.add(comboBoxDigitalSign);
