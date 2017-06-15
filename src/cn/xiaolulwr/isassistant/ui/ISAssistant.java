@@ -104,13 +104,9 @@ public class ISAssistant extends JFrame implements ActionListener {
 		menuItemOpenFile.addActionListener(this);
 		menu.add(menuItemOpenFile);
 		
-		JMenuItem menuItemExit = new JMenuItem("退出");
-		menuItemExit.addActionListener(this);
-		
 		JMenuItem menuItemCloseFile = new JMenuItem("关闭文件");
 		menuItemCloseFile.addActionListener(this);
 		menu.add(menuItemCloseFile);
-		menu.add(menuItemExit);
 		
 		JMenu menu_2 = new JMenu("密钥库");
 		menuBar.add(menu_2);
@@ -628,7 +624,9 @@ public class ISAssistant extends JFrame implements ActionListener {
 		}
 	}
 	public void reset() {
-		workingFile=null;
+		if(workingFile!=null) {
+			closeFile();
+		}
 		this.setFilePath("");
 		sliderEncryptMode.setEnabled(true);
 		textField224Value.setText("");
@@ -637,6 +635,9 @@ public class ISAssistant extends JFrame implements ActionListener {
 		textField512Value.setText("");
 		textFieldSignValue.setText("");
 		textFieldMacMessage.setText("");
+		textFieldHashMessage.setText("");
+		textFieldMacValue.setText("");
+		textFieldSaveFile.setText("");
 	}
 	public void setFilePath(String path) {
 		textFieldCryptoFile.setText(path);
@@ -647,8 +648,8 @@ public class ISAssistant extends JFrame implements ActionListener {
 	public void closeFile() {
 		workingFile=null;
 		this.setFilePath("");
-		textFieldHashMessage.setEnabled(true);
-		textFieldMacMessage.setEnabled(true);
+		textFieldHashMessage.setEditable(true);
+		textFieldMacMessage.setEditable(true);
 		JOptionPane.showMessageDialog(this,"文件已关闭","提示",JOptionPane.INFORMATION_MESSAGE);
 	}
 	public void closeKeyStore() {
