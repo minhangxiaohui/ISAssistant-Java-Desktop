@@ -12,7 +12,11 @@ import cn.xiaolulwr.isassistant.common.VerifyPasswordDialogListener;
 
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
-
+/**
+ * 验证密码对话框
+ * @author 路伟饶
+ *
+ */
 public class VerifyPasswordDialog extends JDialog {
 
 	private static final long serialVersionUID = 1L;
@@ -20,7 +24,9 @@ public class VerifyPasswordDialog extends JDialog {
 
 	private final JPanel contentPanel = new JPanel();
 	private JPasswordField passwordFieldVerify;
-
+	/**
+	 * 构造器
+	 */
 	public VerifyPasswordDialog() {
 		setTitle("验证密码");
 		setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
@@ -69,6 +75,11 @@ public class VerifyPasswordDialog extends JDialog {
 			}
 		}
 	}
+	/**
+	 * 设置监听器
+	 * @param listener
+	 * 监听器接口类
+	 */
 	public void addListener(VerifyPasswordDialogListener listener) {
 		this.listener = listener;
 	}

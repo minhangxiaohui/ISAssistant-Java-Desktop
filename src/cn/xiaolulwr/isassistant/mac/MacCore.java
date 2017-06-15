@@ -7,11 +7,21 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.xml.bind.annotation.adapters.HexBinaryAdapter;
-
+/**
+ * 消息认证码类
+ * @author 路伟饶
+ *
+ */
 public class MacCore {
 	private static MacCore instance;
 	private String algorithm;
-	
+	/**
+	 * 获得消息认证码类的实例
+	 * @param algorithm
+	 * 消息认证算法
+	 * @return
+	 * 消息认证码类的实例
+	 */
 	public static MacCore getInstance(String algorithm) {
 		if(instance==null) {
 			instance=new MacCore();
@@ -19,6 +29,16 @@ public class MacCore {
 		instance.algorithm=algorithm;
 		return instance;
 	}
+	/**
+	 * 获得字符串的消息认证码
+	 * @param message
+	 * 消息字符串
+	 * @param password
+	 * 用于消息认证的密码
+	 * @return
+	 * 消息认证码
+	 * @throws Exception
+	 */
 	public String getMac(String message,char[] password) throws Exception {
 		byte[] in=message.getBytes();
 		Mac mac=Mac.getInstance(algorithm);
@@ -28,10 +48,32 @@ public class MacCore {
 		byte[] out=mac.doFinal();
 		return new HexBinaryAdapter().marshal(out);
 	}
+	/**
+	 * 校验字符串的消息认证码
+	 * @param message
+	 * 消息字符串
+	 * @param password
+	 * 用于消息认证的密码
+	 * @param value
+	 * 消息认证码
+	 * @return
+	 * 是否通过验证
+	 * @throws Exception
+	 */
 	public boolean checkMac(String message,char[] password,String value) throws Exception {
 		String currentValue=getMac(message, password);
 		return currentValue.equals(value);
 	}
+	/**
+	 * 获得文件的消息验证码
+	 * @param fileToMac
+	 * 文件对象
+	 * @param password
+	 * 用于消息认证的密码
+	 * @return
+	 * 消息认证码
+	 * @throws Exception
+	 */
 	public String getMac(File fileToMac,char[] password) throws Exception{
 		FileInputStream fin=new FileInputStream(fileToMac);
 		Mac mac=Mac.getInstance(algorithm);
@@ -46,6 +88,18 @@ public class MacCore {
 		fin.close();
 		return new HexBinaryAdapter().marshal(out);
 	}
+	/**
+	 * 验证文件的消息认证码
+	 * @param fileToCheck
+	 * 文件对象
+	 * @param password
+	 * 用于消息认证的密码
+	 * @param value
+	 * 消息认证码
+	 * @return
+	 * 是否验证通过
+	 * @throws Exception
+	 */
 	public boolean checkMac(File fileToCheck,char[] password,String value) throws Exception {
 		String currentValue=getMac(fileToCheck, password);
 		return currentValue.equals(value);

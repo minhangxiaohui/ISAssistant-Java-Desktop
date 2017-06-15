@@ -35,7 +35,11 @@ import cn.xiaolulwr.isassistant.hash.DigestCore;
 import cn.xiaolulwr.isassistant.mac.MacCore;
 import cn.xiaolulwr.isassistant.sign.DigitalSignCore;
 
-
+/**
+ * 主界面类，包括四个标签页
+ * @author 路伟饶
+ *
+ */
 public class ISAssistant extends JFrame implements ActionListener {
 
 	private static final long serialVersionUID = 1L;
@@ -86,7 +90,9 @@ public class ISAssistant extends JFrame implements ActionListener {
 			}
 		});
 	}
-
+	/**
+	 * 构造器
+	 */
 	public ISAssistant() {
 		setResizable(false);
 		setTitle("信息安全助手");
@@ -418,7 +424,9 @@ public class ISAssistant extends JFrame implements ActionListener {
 		lblMac_1.setBounds(102, 82, 61, 16);
 		panelMac.add(lblMac_1);
 	}
-
+	/**
+	 * 事件处理函数
+	 */
 	public void actionPerformed(ActionEvent e) {
 		if(e.getActionCommand().equals("浏览") || e.getActionCommand().equals("打开文件")) {
 			this.selectWorkingFile();
@@ -466,24 +474,32 @@ public class ISAssistant extends JFrame implements ActionListener {
 			System.out.println(e.getActionCommand());
 		}
 	}
-	
+	/**
+	 * 选择工作文件
+	 */
 	public void selectWorkingFile() {
 		JFileChooser fileChooser=new JFileChooser();
 		if(fileChooser.showOpenDialog(this)==JFileChooser.APPROVE_OPTION) {
 			workingFile=fileChooser.getSelectedFile();
 			this.setFilePath(workingFile.getAbsolutePath());
+//			如果选择的文件是加密文件，则文件加密自动进入解密模式
 			if(workingFile.getName().endsWith(".xiaolucrypto")) {
 				btnCrypto.setText("开始解密");
 				sliderEncryptMode.setEnabled(false);
 			}
+//			对于其他文件类型都是加密模式
 			else {
 				btnCrypto.setText("开始加密");
 				sliderEncryptMode.setEnabled(true);
 			}
+//			选择文件后，消息摘要和消息认证码都改为针对文件的模式
 			textFieldHashMessage.setEditable(false);
 			textFieldMacMessage.setEditable(false);
 		}
 	}
+	/**
+	 * 保存文件
+	 */
 	public void saveFile() {
 		JFileChooser fileChooser=new JFileChooser();
 		FileFilter filter=new FileFilter() {
@@ -494,6 +510,7 @@ public class ISAssistant extends JFrame implements ActionListener {
 				}
 				else {
 					String fileName=pathname.getName();
+//					加密模式中，保存文件的类型为加密文件类型
 					if(btnCrypto.getText().equals("开始加密")) {
 						if(fileName.endsWith(".xiaolucrypto")) {
 							return true;
@@ -502,6 +519,7 @@ public class ISAssistant extends JFrame implements ActionListener {
 							return false;
 						}
 					}
+//					解密模式中，保存文件可以是任意类型
 					else if(btnCrypto.getText().equals("开始解密")) {
 						return true;
 					}
@@ -521,18 +539,21 @@ public class ISAssistant extends JFrame implements ActionListener {
 				else {
 					return null;
 				}
-				
 			}
 		};
 		fileChooser.setFileFilter(filter);
 		if(fileChooser.showSaveDialog(this)==JFileChooser.APPROVE_OPTION) {
 			outputFile=fileChooser.getSelectedFile();
+//			对于加密模式，自动添加后缀
 			if(!outputFile.getName().endsWith(".xiaolucrypto") && btnCrypto.getText().equals("开始加密")) {
 				outputFile=new File(outputFile.getAbsolutePath()+".xiaolucrypto");
 			}
 			textFieldSaveFile.setText(outputFile.getAbsolutePath());
 		}
 	}
+	/**
+	 * 创建密钥库
+	 */
 	public void createKeyStore() {
 		JFileChooser fileChooser=new JFileChooser();
 		FileFilter filter=new FileFilter() {
@@ -564,6 +585,9 @@ public class ISAssistant extends JFrame implements ActionListener {
 			}
 			SetPasswordDialog dialog=new SetPasswordDialog();
 			dialog.addListener(new SetPasswordDialogListener() {
+				/**
+				 * 回调方法，取回输入的密码
+				 */
 				public void didSetPasswordDialogOkButtonClicked(Object sender, char[] password) {
 					try {
 						ksmanager=KeyStoreManager.getInstance();
@@ -579,6 +603,9 @@ public class ISAssistant extends JFrame implements ActionListener {
 			dialog.setVisible(true);
 		}
 	}
+	/**
+	 * 打开密钥库
+	 */
 	public void openKeyStore() {
 		JFileChooser fileChooser=new JFileChooser();
 		FileFilter filter=new FileFilter() {
@@ -607,6 +634,9 @@ public class ISAssistant extends JFrame implements ActionListener {
 			keystoreFile=fileChooser.getSelectedFile();
 			VerifyPasswordDialog dialog=new VerifyPasswordDialog();
 			dialog.addListener(new VerifyPasswordDialogListener() {
+				/**
+				 * 回调方法，取回输入的密码
+				 */
 				public void didVerifyPasswordDialogOkButtonClicked(Object sender, char[] password) {
 					try {
 						ksmanager=KeyStoreManager.getInstance();
@@ -623,6 +653,9 @@ public class ISAssistant extends JFrame implements ActionListener {
 			dialog.setVisible(true);
 		}
 	}
+	/**
+	 * 重置
+	 */
 	public void reset() {
 		if(workingFile!=null) {
 			closeFile();
@@ -639,12 +672,20 @@ public class ISAssistant extends JFrame implements ActionListener {
 		textFieldMacValue.setText("");
 		textFieldSaveFile.setText("");
 	}
+	/**
+	 * 设置文件路径文本框
+	 * @param path
+	 * 文件路径
+	 */
 	public void setFilePath(String path) {
 		textFieldCryptoFile.setText(path);
 		textFieldSignFile.setText(path);
 		textFieldHashMessage.setText(path);
 		textFieldMacMessage.setText(path);
 	}
+	/**
+	 * 关闭文件
+	 */
 	public void closeFile() {
 		workingFile=null;
 		this.setFilePath("");
@@ -652,11 +693,17 @@ public class ISAssistant extends JFrame implements ActionListener {
 		textFieldMacMessage.setEditable(true);
 		JOptionPane.showMessageDialog(this,"文件已关闭","提示",JOptionPane.INFORMATION_MESSAGE);
 	}
+	/**
+	 * 关闭密钥库
+	 */
 	public void closeKeyStore() {
 		keystoreFile=null;
 		ksmanager=null;
 		JOptionPane.showMessageDialog(this,"密钥库已关闭","提示",JOptionPane.INFORMATION_MESSAGE);
 	}
+	/**
+	 * 加密和解密文件
+	 */
 	public void cryptoFile() {
 		if(workingFile==null) {
 			JOptionPane.showMessageDialog(this,"请选择文件","错误",JOptionPane.ERROR_MESSAGE);
@@ -668,8 +715,12 @@ public class ISAssistant extends JFrame implements ActionListener {
 		}
 		if(btnCrypto.getText().equals("开始加密")) {
 			SetPasswordDialog dialog=new SetPasswordDialog();
+			/**
+			 * 回调方法，取回输入的密码
+			 */
 			dialog.addListener(new SetPasswordDialogListener() {
 				public void didSetPasswordDialogOkButtonClicked(Object sender, char[] password) {
+//					通过Slider滑动框的值折算出密钥长度
 					int keyLength=(sliderEncryptMode.getValue()/2+1)*16;
 					CryptoCore core=CryptoCore.getInstance();
 					try {
@@ -689,6 +740,9 @@ public class ISAssistant extends JFrame implements ActionListener {
 		else if(btnCrypto.getText().equals("开始解密")) {
 			VerifyPasswordDialog dialog=new VerifyPasswordDialog();
 			dialog.addListener(new VerifyPasswordDialogListener() {
+				/**
+				 * 回调方法，取回输入的密码
+				 */
 				public void didVerifyPasswordDialogOkButtonClicked(Object sender, char[] password) {
 					CryptoCore core=CryptoCore.getInstance();
 					try {
@@ -706,6 +760,9 @@ public class ISAssistant extends JFrame implements ActionListener {
 			dialog.setVisible(true);
 		}
 	}
+	/**
+	 * 签名验证模式更改
+	 */
 	public void verifyModeChanged() {
 		if(checkBoxIsVerify.isSelected()) {
 			btnSign.setText("开始验证");
@@ -716,6 +773,9 @@ public class ISAssistant extends JFrame implements ActionListener {
 			textFieldSignValue.setEditable(false);
 		}
 	}
+	/**
+	 * 生成签名和签名验证
+	 */
 	public void signFile() {
 		if(workingFile==null) {
 			JOptionPane.showMessageDialog(this,"请选择文件","错误",JOptionPane.ERROR_MESSAGE);
@@ -750,10 +810,15 @@ public class ISAssistant extends JFrame implements ActionListener {
 			JOptionPane.showMessageDialog(this,e.getMessage(),"错误",JOptionPane.ERROR_MESSAGE);
 			if(e.getMessage().equals("密钥库不合法或密码错误")) {
 				this.openKeyStore();
-				this.signFile();
+			}
+			else if(e.getClass().getName().equals("java.lang.NullPointerException")) {
+				JOptionPane.showMessageDialog(this,"签名验证失败","错误",JOptionPane.ERROR_MESSAGE);
 			}
 		}
 	}
+	/**
+	 * 消息摘要算法模式更改
+	 */
 	public void hashModeChanged() {
 		if(checkBoxIsUseSha3.isSelected()==true) {
 			labelHash224.setText("SHA3-224");
@@ -768,6 +833,9 @@ public class ISAssistant extends JFrame implements ActionListener {
 			labelHash512.setText("SHA-512");
 		}
 	}
+	/**
+	 * 获得消息摘要值
+	 */
 	public void getHashValue() {
 		try {
 			String algorithm;
@@ -807,6 +875,9 @@ public class ISAssistant extends JFrame implements ActionListener {
 			JOptionPane.showMessageDialog(this,e.getMessage(),"错误",JOptionPane.ERROR_MESSAGE);
 		}
 	}
+	/**
+	 * 消息摘要模式更改
+	 */
 	public void verifyMacModeChanged() {
 		if(checkBoxIsVerifyMac.isSelected()==true) {
 			btnMac.setText("验证MAC");
@@ -817,10 +888,16 @@ public class ISAssistant extends JFrame implements ActionListener {
 			textFieldMacValue.setEditable(false);
 		}
 	}
+	/**
+	 * 获得消息摘要
+	 */
 	public void getMac() {
 		if(btnMac.getText().equals("计算MAC")) {
 			SetPasswordDialog dialog=new SetPasswordDialog();
 			dialog.addListener(new SetPasswordDialogListener() {
+				/**
+				 * 回调方法，取回输入的密码
+				 */
 				public void didSetPasswordDialogOkButtonClicked(Object sender, char[] password) {
 					String algorithm=comboBoxMacMode.getSelectedItem().toString();
 					MacCore core=MacCore.getInstance(algorithm);
@@ -845,6 +922,9 @@ public class ISAssistant extends JFrame implements ActionListener {
 		else if(btnMac.getText().equals("验证MAC")) {
 			VerifyPasswordDialog dialog=new VerifyPasswordDialog();
 			dialog.addListener(new VerifyPasswordDialogListener() {
+				/**
+				 * 回调方法，取回输入的密码
+				 */
 				public void didVerifyPasswordDialogOkButtonClicked(Object sender, char[] password) {
 					String algorithm=comboBoxMacMode.getSelectedItem().toString();
 					MacCore core=MacCore.getInstance(algorithm);

@@ -16,7 +16,11 @@ import javax.swing.JPasswordField;
 import java.awt.event.ActionListener;
 import java.util.Arrays;
 import java.awt.event.ActionEvent;
-
+/**
+ * 设置密码对话框
+ * @author 路伟饶
+ *
+ */
 public class SetPasswordDialog extends JDialog {
 
 	private static final long serialVersionUID = 1L;
@@ -25,7 +29,9 @@ public class SetPasswordDialog extends JDialog {
 	private final JPanel contentPanel = new JPanel();
 	private JPasswordField passwordFieldSet;
 	private JPasswordField passwordFieldConfirm;
-
+	/**
+	 * 构造器
+	 */
 	public SetPasswordDialog() {
 		setTitle("设置密码");
 		setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
@@ -63,6 +69,9 @@ public class SetPasswordDialog extends JDialog {
 			{
 				JButton okButton = new JButton("好");
 				okButton.addActionListener(new ActionListener() {
+					/**
+					 * 点击好按钮回调方法
+					 */
 					public void actionPerformed(ActionEvent e) {
 						char[] password=passwordFieldSet.getPassword();
 						char[] passwordConfirm=passwordFieldConfirm.getPassword();
@@ -75,6 +84,7 @@ public class SetPasswordDialog extends JDialog {
 							return;
 						}
 						dispose();
+//						回调方法，回传输入的密码
 						listener.didSetPasswordDialogOkButtonClicked(this, passwordConfirm);
 					}
 				});
@@ -85,6 +95,9 @@ public class SetPasswordDialog extends JDialog {
 			{
 				JButton cancelButton = new JButton("取消");
 				cancelButton.addActionListener(new ActionListener() {
+					/**
+					 * 点击取消按钮回调方法
+					 */
 					public void actionPerformed(ActionEvent e) {
 						passwordFieldSet.setText("");
 						passwordFieldConfirm.setText("");
@@ -96,7 +109,11 @@ public class SetPasswordDialog extends JDialog {
 			}
 		}
 	}
-
+	/**
+	 * 设置监听器
+	 * @param listener
+	 * 监听器接口类
+	 */
 	public void addListener(SetPasswordDialogListener listener) {
 		this.listener = listener;
 	}
