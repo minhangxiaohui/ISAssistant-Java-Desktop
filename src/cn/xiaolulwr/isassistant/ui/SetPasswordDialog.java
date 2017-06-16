@@ -76,10 +76,12 @@ public class SetPasswordDialog extends JDialog {
 						char[] password=passwordFieldSet.getPassword();
 						char[] passwordConfirm=passwordFieldConfirm.getPassword();
 						if(password.length<6 || password.length>16) {
+							setAlwaysOnTop(false);
 							JOptionPane.showMessageDialog(null,"密码长度必须介于6-16位之间","错误",JOptionPane.ERROR_MESSAGE);
 							return;
 						}
 						if(!Arrays.equals(password, passwordConfirm)) {
+							setAlwaysOnTop(false);
 							JOptionPane.showMessageDialog(null,"两次密码输入不一致","错误",JOptionPane.ERROR_MESSAGE);
 							return;
 						}
