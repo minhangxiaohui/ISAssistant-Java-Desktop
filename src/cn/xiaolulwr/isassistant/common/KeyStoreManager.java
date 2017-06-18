@@ -169,7 +169,7 @@ public class KeyStoreManager {
 			certbuilder.addExtension(new ASN1ObjectIdentifier("2.5.29.19"), true, basicConstraints);
 			X509Certificate cert=
 					new JcaX509CertificateConverter().setProvider(new BouncyCastleProvider()).getCertificate(certbuilder.build(signer));
-			keystoreInst.setKeyEntry(entryName, pair.getPrivate().getEncoded(), new X509Certificate[]{cert});
+			keystoreInst.setKeyEntry(entryName, pair.getPrivate(),password, new X509Certificate[]{cert});
 			FileOutputStream out=new FileOutputStream(keystoreFile);
 			keystoreInst.store(out, password);
 			in.close();
