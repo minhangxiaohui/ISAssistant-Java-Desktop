@@ -6,6 +6,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
 import javax.xml.bind.annotation.adapters.HexBinaryAdapter;
+
 import cn.xiaolulwr.isassistant.common.KeyStoreManager;
 /**
  * 数字签名类
