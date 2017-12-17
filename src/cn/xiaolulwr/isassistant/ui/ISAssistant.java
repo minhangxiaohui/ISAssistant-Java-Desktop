@@ -23,13 +23,12 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.DefaultComboBoxModel;
+
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import cn.xiaolulwr.isassistant.common.DigitalSignatureAlgorithm;
-import cn.xiaolulwr.isassistant.common.HashAlgorithm;
 import cn.xiaolulwr.isassistant.common.KeyStoreManager;
 import cn.xiaolulwr.isassistant.common.SetPasswordDialogListener;
 import cn.xiaolulwr.isassistant.common.VerifyPasswordDialogListener;
-import cn.xiaolulwr.isassistant.common.HmacAlgorithm;
+import cn.xiaolulwr.isassistant.common.*;
 import cn.xiaolulwr.isassistant.crypto.CryptoCore;
 import cn.xiaolulwr.isassistant.hash.DigestCore;
 import cn.xiaolulwr.isassistant.mac.MacCore;
@@ -81,7 +80,7 @@ public class ISAssistant extends JFrame implements ActionListener {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					Security.addProvider(new BouncyCastleProvider());
+//					Security.addProvider(new BouncyCastleProvider());
 					ISAssistant frame = new ISAssistant();
 					frame.setVisible(true);
 				} catch (Exception e) {

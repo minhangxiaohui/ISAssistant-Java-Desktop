@@ -22,8 +22,8 @@ dependencies {
     // The production code uses the SLF4J logging API at compile time
     compile 'org.slf4j:slf4j-api:1.7.21'
 
-	// https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk14
-	compile group: 'org.bouncycastle', name: 'bcprov-jdk14', version: '1.57'
+	// https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk15on
+	compile group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.57'
 	
 	// https://mvnrepository.com/artifact/org.bouncycastle/bcpkix-jdk15on
 	compile group: 'org.bouncycastle', name: 'bcpkix-jdk15on', version: '1.57'

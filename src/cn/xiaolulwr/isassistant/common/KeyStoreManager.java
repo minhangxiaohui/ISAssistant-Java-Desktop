@@ -57,7 +57,7 @@ public class KeyStoreManager {
 	 * 密钥库的密码，不会在此处验证密钥库密码的正确性
 	 */
 	public void openKeyStoreFromFile(File file,char[] password) {
-		this.password=password.clone();
+		this.password=(char[]) password.clone();
 		keystoreFile=file;
 	}
 	/**
@@ -70,7 +70,7 @@ public class KeyStoreManager {
 	 * 文件异常
 	 */
 	public void createKeyStore(File file,char[] password) throws Exception{
-		this.password=password.clone();
+		this.password=(char[]) password.clone();
 		keystoreFile=file;
 		FileOutputStream out=new FileOutputStream(keystoreFile);
 		keystoreInst.load(null, password);
