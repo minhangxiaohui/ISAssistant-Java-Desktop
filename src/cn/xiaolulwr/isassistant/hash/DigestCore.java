@@ -4,8 +4,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
+import java.util.Base64;
 
-import javax.xml.bind.annotation.adapters.HexBinaryAdapter;
+//import javax.xml.bind.annotation.adapters.HexBinaryAdapter;
 /**
  * 消息摘要类
  * @author 路伟饶
@@ -41,7 +42,8 @@ public class DigestCore {
 		byte[] in=message.getBytes();
 		MessageDigest md=MessageDigest.getInstance(algorithm);
 		byte[] out=md.digest(in);
-		return new HexBinaryAdapter().marshal(out);
+		return Base64.getEncoder().encodeToString(out);
+//		return new HexBinaryAdapter().marshal(out);
 	}
 	/**
 	 * 校验字符串消息摘要值的方法
@@ -73,7 +75,8 @@ public class DigestCore {
 		while((din.read(buffer))!=-1);
 		byte[] out=md.digest();
 		din.close();
-		return new HexBinaryAdapter().marshal(out);
+		return Base64.getEncoder().encodeToString(out);
+//		return new HexBinaryAdapter().marshal(out);
 	}
 	/**
 	 * 校验文件消息摘要值的方法

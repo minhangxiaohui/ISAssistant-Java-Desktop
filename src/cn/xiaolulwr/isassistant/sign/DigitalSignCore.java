@@ -5,7 +5,8 @@ import java.io.FileInputStream;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
-import javax.xml.bind.annotation.adapters.HexBinaryAdapter;
+//import javax.xml.bind.annotation.adapters.HexBinaryAdapter;
+import java.util.Base64;
 
 import cn.xiaolulwr.isassistant.common.KeyStoreManager;
 /**
@@ -55,7 +56,8 @@ public class DigitalSignCore {
 			signature.update(buffer,0,n);
 		}
 		byte[] signValue=signature.sign();
-		return new HexBinaryAdapter().marshal(signValue);
+		return Base64.getEncoder().encodeToString(signValue);
+//		return new HexBinaryAdapter().marshal(signValue);
 	}
 	/**
 	 * 验证文件的数字签名
@@ -78,7 +80,8 @@ public class DigitalSignCore {
 			signature.update(buffer,0,n);
 		}
 		try {
-			return signature.verify(new HexBinaryAdapter().unmarshal(signValue));
+//			return signature.verify(new HexBinaryAdapter().unmarshal(signValue));
+			return signature.verify(Base64.getDecoder().decode(signValue));
 		} catch (Exception e) {
 			throw new Exception("签名验证失败");
 		}

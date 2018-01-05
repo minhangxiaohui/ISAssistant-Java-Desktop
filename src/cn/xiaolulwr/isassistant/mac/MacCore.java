@@ -3,10 +3,12 @@ package cn.xiaolulwr.isassistant.mac;
 import java.io.File;
 import java.io.FileInputStream;
 import java.security.SecureRandom;
+import java.util.Base64;
+
 import javax.crypto.KeyGenerator;
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
-import javax.xml.bind.annotation.adapters.HexBinaryAdapter;
+//import javax.xml.bind.annotation.adapters.HexBinaryAdapter;
 /**
  * 消息认证码类
  * @author 路伟饶
@@ -46,7 +48,8 @@ public class MacCore {
 		mac.init(key);
 		mac.update(in);
 		byte[] out=mac.doFinal();
-		return new HexBinaryAdapter().marshal(out);
+//		return new HexBinaryAdapter().marshal(out);
+		return Base64.getEncoder().encodeToString(out);
 	}
 	/**
 	 * 校验字符串的消息认证码
@@ -86,7 +89,8 @@ public class MacCore {
 		}
 		byte[] out=mac.doFinal();
 		fin.close();
-		return new HexBinaryAdapter().marshal(out);
+//		return new HexBinaryAdapter().marshal(out);
+		return Base64.getEncoder().encodeToString(out);
 	}
 	/**
 	 * 验证文件的消息认证码

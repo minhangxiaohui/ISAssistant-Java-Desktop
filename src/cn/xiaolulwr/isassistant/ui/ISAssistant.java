@@ -80,7 +80,7 @@ public class ISAssistant extends JFrame implements ActionListener {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-//					Security.addProvider(new BouncyCastleProvider());
+					Security.addProvider(new BouncyCastleProvider());
 					ISAssistant frame = new ISAssistant();
 					frame.setVisible(true);
 				} catch (Exception e) {
